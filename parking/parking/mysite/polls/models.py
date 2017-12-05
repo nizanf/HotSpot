@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+
+
+class Profile(models.Model):
+	user = models.OneToOneField(User, on_delete=models.CASCADE)
+	phone_number = models.CharField(max_length=20, blank=True)
+    	score = models.IntegerField(default=50) #start with 50 scores.
+    	rating = models.IntegerField(default=0) # start with rating 0.
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+	if created:
+		Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+  	instance.profile.save()
+
+
+
+class Purchase(models.Model):
+	buy = models.IntegerField(default=-1) # user id
+	sell = models.IntegerField(default=-1) # user id
+    	cost = models.IntegerField(default=10)
+	parking_time = models.DateTimeField()
+	status = models.CharField(max_length=200, default="pending") #pending, done, in process, canceled etc.
+    	parking_rate = models.DecimalField(max_digits = 3, decimal_places=3, default=-1) #distance between target address and parking address. 
+	target_address = models.CharField(max_length=200) #coordinates of target address. (x,y)
+	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
+
