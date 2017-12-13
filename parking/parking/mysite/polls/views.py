@@ -1,47 +1,91 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.shortcuts import render
-
-from django.contrib.auth import authenticate
-from django.contrib.auth import logout
-
-from django.contrib.auth.models import User
-from .models import Profile, Purchase
-
-from django.core import serializers
-
 import datetime
 # for lock 
 import threading
 import time
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.contrib.auth import authenticate
+from django.contrib.auth import logout
+from django.contrib.auth.models import User
+from .models import Profile, Purchase
+from django.core import serializers
 from random import randint
 
-
-
+RELOGIN_TIMEOUT = 10
+THRESHOLD_FAILURES = 5
 TIMEOUT_AVAILABLE_PARKING = 20
+THRESHOLD_RATING_TO_FREE_SPOT = 5
+FREE_PARKING_EXISTENCE_TIME = 30
+
 
 def login(request):
-	given_username = request.POST.get("username") #in template, div name = username.
+	
+	"""
+		Login method
+	"""
+	if (request.session['login_failures'] and /
+		request.session['login_failures'] > THRESHOLD_FAILURES and /
+		diff_minutes(request.session['last_failure']) < RELOGIN_TIMEOUT ):
+			return render(request, 'polls/login.html', {"msg":"The user is locked for {0} minutes".format(RELOGIN_TIMEOUT)})
+
+
+	given_email = request.POST.get("email") #in template, div name = username.
 	given_password = request.POST.get("password") #in template, div name = password.
 
-	auth_code = authenticate(username=given_username, password=given_password)
+	user = authenticate(email=given_email, password=given_password)
 
-	if auth_code : #login succeed
+	if user : #login succeed
+	  	if (user.profile.is_blocked):
+	  		return render(request, 'polls/login.html', {"msg":"User is blocked!"})
+	  	
+	  	# Success
+	  	request.session['login_failures'] = 0
+	  	request.session['last_failure'] = None
 		return render(request, 'polls/homepage.html')
+	
 	else: # login failed
-       	return render(request, 'polls/relogin.html')
+
+		request.session['login_failures'] = request.session['login_failures'] + 1 if request.session['login_failures'] else 1
+		request.session['last_failure'] = datetime.datetime.now
+	  	
+	  	return render(request, 'polls/login.html', {"msg":"email or password incorrect!"})
+
+
+def diff_minutes(last_failure):
+	"""
+		Return True if user is still in timeout
+	"""
+
+	diff = (datetime.now() - last_failure)
+	return (diff.total_seconds() / 60)
 
 
 def register(request):
-	given_username 		= request.POST.get("username") 		# in template, div name = username.
+	"""
+		Register method
+	"""
+
+	#given_username 		= request.POST.get("username") 		# in template, div name = username.
 	given_first_name 	= request.POST.get("first_name") 	# in template, div name = first_name.
 	given_last_name 	= request.POST.get("last_name") 	# in template, div name = last_name.
 	given_email 		= request.POST.get("email") 		# in template, div name = email.
 	given_password	 	= request.POST.get("password") 		# in template, div name = password.
 	given_phone_number 	= request.POST.get("phone_number") 	# in template, div name = phone_number.
+
+	# Unique phone and email check
+	users_list_by_phone	= User.objects.get(profile.phone_number=given_phone_number)
+	if (users_list_by_phone): #there is a user with this phone number
+		return render(request, 'polls/register.html', {"msg":"This phone number already exists"})
+
+	users_list_by_mail	= User.objects.get(email=given_email)
+	if (users_list_by_phone): #there is a user with this mail
+		return render(request, 'polls/register.html', {"msg":"This mail already exists"})
+
 
 	new_user = User.objects.create_user(username=given_username, \
 	 		password = given_password, email = given_email, \
@@ -49,21 +93,71 @@ def register(request):
 
 	new_user.profile.phone_number = given_phone_number
 	new_user.save()
-
-	# TODO : Add message: register successfully
-	return render(request, 'polls/login.html')
-
-# OR - Danny and gal wants to remove
-#	new_user = authenticate(username=given_username, password=given_password)
-#	return render(request, 'polls/homepage.html')
+ 
+	return render(request, 'polls/login.html', {'msg' : 'register success'})
 
 def logout(request):
+	"""	
+		Logout method
+	"""
 	logout(request)
 	return render(request, 'polls/login.html')
 
+
+def report_free_parking(request):
+
+	given_reporter_id 		= request.user.pk  		# user id
+	given_parking_address 	= request.POST.get("location")
+	given_parking_time 		= request.POST.get("parking_time")
+	given_parking_street	= request.POST.get("parking_street")
+
+	parking_in_street = FreeParking.objects.get(street_name=given_parking_street)
+
+	found_valid_parking = False
+
+	if parking_in_street:
+		for parking in parking_in_street:
+			diff_time = diff_minutes(parking.parking_time)
+
+			if diff_time < FREE_PARKING_EXISTENCE_TIME:
+
+				found_valid_parking = True
+
+				reporters_ids_json = parking.reporters_ids
+				reporters_ids_list = json.loads(reporters_ids_json)
+				reporters_ids_list.append(given_reporter_id)
+				reporters_ids_json = json.dumps(reporters_ids_list)
+				parking.reporters_ids = reporters_ids_json
+				parking.parking_rank += request.user.profile.rating
+
+
+				if parking.is_verified:
+					#TO-DO: add rank/points to given_reporter_id user
+
+				else if parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
+					parking.is_verified = 1
+					for usr_id in free_parking
+						#TO-DO: add rank/points
+
+
+				parking.save()
+				break
+
+
+
+	if not found_valid_parking:
+		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), parking_time = given_parking_time, parking_address = parking_in_street, street_name = parking_in_street, parking_rank = request.user.profile.rating)
+		free_parking.save()
+
+	# TODO: Add event log
+
+	return render(request, 'polls/homepage.html')
+
+
+
 def offer_new_parking(request):
 	
-	given_seller_id 		= request.user  					# user id
+	given_seller_id 		= request.user.pk  					# user id
 	given_parking_address 	= request.POST.get("location") 	# TODO: verify the nitzans give us the location
 	given_parking_time 		= request.POST.get("parking_time")
 	purchase 				= Purchase(	purchase_id =getPurchaseID(), seller_id = given_seller_id,\
@@ -129,7 +223,7 @@ def catch_parking(request):
 	asked_target_address = request.POST.get("asked_target_address")
 	seller_user	= User.objects.get(pk=chosen_parking.seller_id)
 
-	buyer_user_id 		 = request.user
+	buyer_user_id 		 = request.user.pk
 	buyer_user 	= User.objects.get(pk=buyer_user_id)
 
 	# The radius according to the zoom of the user's map
@@ -184,7 +278,7 @@ def catch_parking(request):
 
 def buyer_cancel_parking(request):
 	
-	buyer_user_id 		= request.user
+	buyer_user_id 		= request.user.pk
 	parking_id 			= request.POST.get("parking_id")
 	chosen_parking 		= Purchase.objects.get(pk=parking_id)
 	
@@ -216,7 +310,7 @@ def make_exchange(request):
 	provided_pincode 	= request.POST.get("pincode")
 	parking_pincode		= offered_parking.pincode
 
-	seller_user			= User.objects.get(pk=request.user)
+	seller_user			= User.objects.get(pk=request.user.pk)
 	buyer_user 			= User.objects.get(pk=offered_parking.buyer_id)
 
 	if (authenticate_pincode(provided_pincode , parking_pincode)) # if authentication succeeded
@@ -244,7 +338,7 @@ def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
 def seller_cancel_parking(request):
 
 
-	seller_user			= User.objects.get(pk=request.user)
+	seller_user			= User.objects.get(pk=request.user.pk)
 	offered_parking_id 	= request.POST.get("parking_id")
 	offered_parking 	= Purchase.objects.get(pk=parking_id)
 	buyer_id 			= offered_parking.buyer_id
