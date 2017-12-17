@@ -50,6 +50,7 @@ class Purchase(models.Model):
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	pin_code		= models.IntegerField(default=-1)
+	attempt_failure = 0
 
 	def wait_lock(self, timeout):
 		with self.cond:
@@ -68,14 +69,14 @@ class Purchase(models.Model):
 
 class FreeSpot(models.Model):
 	reporters_ids	= models.CharField(default="") 	# user id
-	parking_time 	= models.DateTimeField() #  max 30 minutes from the offering time
-	status 			= models.CharField(max_length=200, default="available") # available, in process, done, canceled irrelevent etc.
+	last_report_time= models.DateTimeField() #  max 30 minutes from the offering time
 	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
 	street_name		= models.CharField(max_length=200) # Parking street name
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	parking_rank	= models.IntegerField(default=0) # start with rating 0
 	is_verified		= models.IntegerField(default=0) # start with rating 0
+
 	def wait_lock(self, timeout):
 		with self.cond:
 			current_time = start_time = time.time()
