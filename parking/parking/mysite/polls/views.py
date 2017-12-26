@@ -8,13 +8,17 @@ import time
 
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.template import loader
 from django.contrib.auth import authenticate
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from .models import Profile, Purchase
 from django.core import serializers
 from random import randint
+import json
+
+
+
 
 TIMEOUT_RELOGIN = 10
 TIMEOUT_LOCK = 10
@@ -24,41 +28,54 @@ THRESHOLD_RATING_TO_FREE_SPOT = 5
 FREE_PARKING_EXISTENCE_TIME = 30
 
 
+def call_login(request):
+	return render(request, 'polls/login.html')
+
+def call_homepage(request):
+	return render(request, 'polls/HotSpot.html')
+
+def call_register(request):
+	return render(request, 'polls/register.html')
+
 def login(request):
-	
+	print("here!!!")
 	"""
 		Login method
 	"""
-	if (request.session['login_failures'] and /
-		request.session['login_failures'] > THRESHOLD_FAILURES and /
-		diff_minutes(request.session['last_failure']) < TIMEOUT_RELOGIN ):
-			return render(request, 'polls/login.html', {"msg":"The user is locked for {0} minutes".format(TIMEOUT_RELOGIN)})
+	if ('login_failures' in request.session and 
+		request.session['login_failures'] > THRESHOLD_FAILURES and 
+		diff_minutes(request.session['last_failure']) < TIMEOUT_RELOGIN ):#TODO error in diff_minutes 
+			return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"The user is locked for {0} minutes".format(TIMEOUT_RELOGIN)})
 
 
-	given_email = request.POST.get("email") #in template, div name = username.
+	given_username = request.POST.get("user") #in template, div name = username.
+	print("given_username = "+given_username)
 	given_password = request.POST.get("password") #in template, div name = password.
-
-	user = authenticate(email=given_email, password=given_password)
+	print("given_password = "+given_password)
+	user = authenticate(username=given_username, password=given_password)
 
 	# Login succeed
 	if user : 
+		print("1")
 
 		# If user is banned
 	  	if (user.profile.is_blocked):
-	  		return render(request, 'polls/login.html', {"msg":"User is blocked!"})
+			print("2")
+	  		return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"User is blocked!"})
 	  	
 	  	# Success
+		print("3")
 	  	request.session['login_failures'] = 0
 	  	request.session['last_failure'] = None
-		return render(request, 'polls/homepage.html')
+		return render(request, 'polls/is_login.html', {"is_login":"true"})
 	
 
-	else: # login failed
-
-		request.session['login_failures'] = request.session['login_failures'] + 1 if request.session['login_failures'] else 1
-		request.session['last_failure'] = datetime.datetime.now
-	  	
-	  	return render(request, 'polls/login.html', {"msg":"email or password incorrect!"})
+	else: # login failed	
+		print("failed")
+		request.session['login_failures'] = request.session['login_failures'] + 1 if 'login_failures' in request.session else 1
+		#request.session['last_failure'] = json.dumps(datetime.datetime.now()) TODO - datetime.datetime(2017, 12, 26, 8, 39, 24, 748746) is not JSON serializable
+	  	request.session["msg"] = "username or password incorrect!"
+	  	return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"username or password incorrect!"})#TODO - do something with msg
 
 
 def diff_minutes(last_failure):
@@ -74,8 +91,8 @@ def register(request):
 	"""
 		Register method
 	"""
-
-	#given_username 		= request.POST.get("username") 		# in template, div name = username.
+	
+	given_username 		= request.POST.get("username") 		# in template, div name = username.
 	given_first_name 	= request.POST.get("first_name") 	# in template, div name = first_name.
 	given_last_name 	= request.POST.get("last_name") 	# in template, div name = last_name.
 	given_email 		= request.POST.get("email") 		# in template, div name = email.
@@ -83,13 +100,15 @@ def register(request):
 	given_phone_number 	= request.POST.get("phone_number") 	# in template, div name = phone_number.
 
 	# Unique phone and email check
-	users_list_by_phone	= User.objects.get(profile.phone_number=given_phone_number)
+	'''
+	users_list_by_phone	= Profile.objects.get(phone_number = given_phone_number)
+
 	if (users_list_by_phone): #there is a user with this phone number
 		return render(request, 'polls/register.html', {"msg":"This phone number already exists"})
 
-	users_list_by_mail	= User.objects.get(email=given_email)
-	if (users_list_by_phone): #there is a user with this mail
-		return render(request, 'polls/register.html', {"msg":"This mail already exists"})
+	users_list_by_username	= User.objects.get(username=given_username)
+	if (users_list_by_phone): #there is a user with this username
+		return render(request, 'polls/register.html', {"msg":"This username already exists"})
 
 
 	new_user = User.objects.create_user(username=given_username, \
@@ -98,8 +117,8 @@ def register(request):
 
 	new_user.profile.phone_number = given_phone_number
 	new_user.save()
- 
-	return render(request, 'polls/login.html', {'msg' : 'register success'})
+ 	'''
+	return render(request, 'polls/is_register.html', {"is_register":"true", 'msg' : 'register success'})
 
 
 def logout(request):
@@ -148,11 +167,12 @@ def report_free_parking(request):
 
 				# If the parking rank is over the threshold - add points to 
 				# the reporters and show it in the map
-				else if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
-					parking.is_verified = 1
-					for usr_id in free_parking
-						#TODO: add rank/points
-						pass
+				else: 
+					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
+						parking.is_verified = 1
+						for usr_id in free_parking:
+							#TODO: add rank/points
+							pass
 
 
 				parking.save()
@@ -366,7 +386,7 @@ def make_exchange(request):
 	seller_user			= User.objects.get(pk=request.user.pk)
 	buyer_user 			= User.objects.get(pk=offered_parking.buyer_id)
 
-	if (authenticate_pincode(provided_pincode , parking_pincode)) # if authentication succeeded
+	if (authenticate_pincode(provided_pincode , parking_pincode)): # if authentication succeeded
 		seller.points 			+= chosen_parking.cost
 		offered_parking.status   = 'done'
 
@@ -458,7 +478,7 @@ def update_rating_for_user(user, status):
 
 
 # Polling 
-
+'''
 def provide_streets_to_query(request):
 
 	user_id 				= request.user.pk  		# user id
@@ -468,3 +488,9 @@ def provide_streets_to_query(request):
 
 	for street_name, grade in data.iteritems():
 		if (grade > 3):
+
+'''
+
+
+
+

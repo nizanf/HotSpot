@@ -1,0 +1,158 @@
+/* CSS Document */
+
+body{
+	margin:0;
+	background-color:#999999;
+	font-family:Arial, Helvetica, sans-serif;
+	direction:rtl;	
+}
+
+img{
+	margin:0;
+	padding:0;
+	float:left;	
+}
+
+h1, h2 ,h3
+{
+	margin:0;	
+}
+
+.all_site{
+	max-width:1300px;
+	width:100%;
+	background-color:#FFFFFF;
+	
+	margin:0 auto;	
+}
+
+header{
+	width:100%;
+	float:left;	
+	background-color:#666666;
+	background:url(../_images_nike/nike_01.jpg);
+}
+
+header .logo{
+	width:70px;
+	float:left;
+	border-right:1px solid grey;
+	padding-left:20px;
+}
+
+header nav {
+	width:500px;
+	float:right;
+	
+	height:49px;
+	
+}
+
+
+header nav ul{
+	
+	float:right;
+	
+	height:49px;
+}
+
+header nav ul{
+	padding:0;
+	margin:0;
+	list-style-type:none;
+
+}
+
+header nav ul li{
+	color:#000;
+	display:inline-block;
+	border-right:1px solid #CCC;
+	height:49px;
+	padding:0 30px;
+	line-height:49px;
+	vertical-align:central;
+	margin:0;
+	float:right;
+}
+
+.big_image{
+	float:left;
+	height:324px;
+	width:100%;
+	background:url(../_images_nike/nike_02.jpg);	
+}
+
+.main{
+	width:100%;	
+	float:left;
+}
+
+.main h1{
+	margin-top:50px;
+	width:100%;
+	text-align:center;
+	float:left;
+}
+
+.main .boxes_out{
+	width:100%;
+	float:left;	
+	padding-bottom:40px;
+}
+
+.main .boxes_out .all_boxes{
+	
+	width:100%;	
+	
+	padding:0;
+	margin:0 auto;
+}
+
+
+
+.main .boxes_out .all_boxes .box{
+	width:23.8%;
+		
+	float:left;
+	margin-top:40px;
+	position:relative;
+	background-color:#FFFFFF;
+	border-right:1px #CCCCCC solid;
+	margin-left:1%;
+	
+}
+
+.main .boxes_out .all_boxes .box:last-child{
+	
+	border-right:0px #CCCCCC solid;
+	
+	
+}
+
+.main .boxes_out .all_boxes .box .img_box{
+	width:96%;
+	float:left;
+	
+}
+.main .boxes_out .all_boxes .box .txt_box{
+	width:96%;
+	float:left;
+	
+	text-align:center;
+	background-color:#FFFFFF;
+	height:180px;
+	border-bottom:7px solid #CCC;
+	
+}
+
+.main .boxes_out .all_boxes .box .txt_box h2{
+	margin-top:30px;
+	
+}
+
+p.clear {
+    clear: both;
+    height: 0;  /* only necessary for IE */
+    margin: 0;
+    padding: 0;
+}

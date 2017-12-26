@@ -14,9 +14,9 @@ class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	
 	phone_number 	= models.CharField(max_length=20, blank=True)
-	points 			= models.IntegerField(default=50) #start with 50 points.
-	rating 			= models.IntegerField(default=2) # start with rating 2
-	is_blocked 		= models.IntegerField(default=0) # start with is blocked 0.
+	points 		= models.IntegerField(default=50) #start with 50 points.
+	rating 		= models.IntegerField(default=2) # start with rating 2
+	is_blocked 	= models.IntegerField(default=0) # start with is blocked 0.
 
   #   numOfPurchases = models.IntegerField(default=0) # start 0 purcahses
  	# numOfSuccessfull = models.IntegerField(default=0)
@@ -68,7 +68,7 @@ class Purchase(models.Model):
 
 
 class FreeSpot(models.Model):
-	reporters_ids	= models.CharField(default="") 	# user id
+	reporters_ids	= models.CharField(default="", max_length = 20000) 	# user id
 	last_report_time= models.DateTimeField() #  max 30 minutes from the offering time
 	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
 	street_name		= models.CharField(max_length=200) # Parking street name
