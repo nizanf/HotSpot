@@ -9,7 +9,8 @@
 <body>
   <div class="all_site">
       <header>
-          <div class="logo">
+        <!-- logo line -the head line of all pages   -->
+        <div class="logo">
               <img src="_images/cars.JPG" height="49"/>          
           </div>  
           <nav>
@@ -18,12 +19,70 @@
                   <a href="HotSpot.html"><li>Home Page</li></a>
               </ul>
           </nav>
+          <!-- background picture define in find_parking.css -->
           <div class="back"></div>
-      
-          <div id="googleMap"</div> 
-        </header>
-        <script type="text/javascript" src="_scripts/script.js"></script>
+          
+          <!-- the map windoe -->
+          <div id="map"></div>
 
+        </header>
+        <script>
+            function initMap(){
+                //map options
+                var mapCanvas = document.getElementById("map");
+                var myCenter = new google.maps.LatLng(32.121678, 34.791143);
+                var mapOptions = {center: myCenter, zoom: 10};
+               
+                //new map
+                var map = new google.maps.Map(mapCanvas,mapOptions);
+                
+                // Array off markers- Parking spaces published
+                //TODO: how to get coords from database  
+                var markers = [
+                    {
+                        coords:{lat:32.121678, lng:34.873},
+                        content : '<h1>Adam sendler rating:269</h1>'
+                    },
+                    {
+                        coords:myCenter,
+                        content : '<h1>the center of the map</h1>'
+                    }
+                ];              
+            
+                //loop to add -markers
+                for(var i = 0;i < markers.length;i++){
+                    addMarker(markers[i]);
+                }
+
+                //add marker function
+                function addMarker(props){
+                    var marker = new google.maps.Marker({
+                    position: props.coords,
+                    map:map
+                    //TODO if we want change image of marker
+                    //icon
+                    });
+
+                    
+                    //TODO Add the seller's name and rating
+                    var infoWindow = new google.maps.InfoWindow({
+                        content:  props.content
+                    });
+
+                    marker.addListener('click', function() {
+                        infoWindow.open(map, marker);
+                    }); 
+                    
+                    
+                }
+         }
+
+            </script>
+            
+
+            
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&callback=initMap"></script>
+            
         <footer>
             find your spot
         </footer>  
