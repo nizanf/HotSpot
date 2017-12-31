@@ -16,7 +16,7 @@ from .models import Profile, Purchase
 from django.core import serializers
 from random import randint
 import json
-
+from time import gmtime, strftime
 
 
 
@@ -37,34 +37,51 @@ def call_homepage(request):
 def call_register(request):
 	return render(request, 'polls/register.html')
 
-def login(request):
-	print("here!!!")
+def call_report(request):
+	return render(request, 'polls/find_parking.html')
+
+def call_heatmap(request):
+	return render(request, 'polls/heatmap.html')
+
+def call_history(request):
+	return render(request, 'polls/history.html')
+
+def call_offer(request):
+	return render(request, 'polls/offer_parking.html')
+
+
+def login_user(request):
+	request.session["msg"] = ""
+
 	"""
 		Login method
 	"""
 	if ('login_failures' in request.session and 
-		request.session['login_failures'] > THRESHOLD_FAILURES and 
-		diff_minutes(request.session['last_failure']) < TIMEOUT_RELOGIN ):#TODO error in diff_minutes 
-			return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"The user is locked for {0} minutes".format(TIMEOUT_RELOGIN)})
+		request.session['login_failures'] >= THRESHOLD_FAILURES and 
+		diff_minutes(request.session['last_failure']) < TIMEOUT_RELOGIN ):
+
+			request.session['msg'] = str("The user is locked for {0} minutes".format(TIMEOUT_RELOGIN))
+
+			print("request.session['login_failures'] = "+str(request.session['login_failures']))			
+			print("diff_minutes(request.session['last_failure']) = "+str(diff_minutes(request.session['last_failure'])))
+			return render(request, 'polls/is_login.html', {"is_login":"false"})
 
 
-	given_username = request.POST.get("user") #in template, div name = username.
+	given_username = request.POST.get("username")
 	print("given_username = "+given_username)
-	given_password = request.POST.get("password") #in template, div name = password.
+	given_password = request.POST.get("password")
 	print("given_password = "+given_password)
 	user = authenticate(username=given_username, password=given_password)
 
-	# Login succeed
+	# found user
 	if user : 
-		print("1")
 
 		# If user is banned
 	  	if (user.profile.is_blocked):
-			print("2")
-	  		return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"User is blocked!"})
+			request.session['msg'] = "User is blocked!"
+	  		return render(request, 'polls/is_login.html', {"is_login":"false"})
 	  	
 	  	# Success
-		print("3")
 	  	request.session['login_failures'] = 0
 	  	request.session['last_failure'] = None
 		return render(request, 'polls/is_login.html', {"is_login":"true"})
@@ -73,17 +90,21 @@ def login(request):
 	else: # login failed	
 		print("failed")
 		request.session['login_failures'] = request.session['login_failures'] + 1 if 'login_failures' in request.session else 1
-		#request.session['last_failure'] = json.dumps(datetime.datetime.now()) TODO - datetime.datetime(2017, 12, 26, 8, 39, 24, 748746) is not JSON serializable
+		request.session['last_failure'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
 	  	request.session["msg"] = "username or password incorrect!"
-	  	return render(request, 'polls/is_login.html', {"is_login":"false", "msg":"username or password incorrect!"})#TODO - do something with msg
+	  	return render(request, 'polls/is_login.html', {"is_login":"false"})
 
 
-def diff_minutes(last_failure):
+def diff_minutes(last_failure_in_string):
 	"""
 		Return True if user is still in timeout
 	"""
+	print("in diff_minutes")
+	last_failure_in_datetime = datetime.datetime.strptime(last_failure_in_string, "%Y-%m-%d %H:%M:%S")
 
-	diff = (datetime.now() - last_failure)
+	diff = (datetime.datetime.now() - last_failure_in_datetime)
+	print("diff = "+str(diff.total_seconds() / 60))
 	return (diff.total_seconds() / 60)
 
 
@@ -91,7 +112,8 @@ def register(request):
 	"""
 		Register method
 	"""
-	
+	request.session["msg"] = ""
+
 	given_username 		= request.POST.get("username") 		# in template, div name = username.
 	given_first_name 	= request.POST.get("first_name") 	# in template, div name = first_name.
 	given_last_name 	= request.POST.get("last_name") 	# in template, div name = last_name.
@@ -99,16 +121,25 @@ def register(request):
 	given_password	 	= request.POST.get("password") 		# in template, div name = password.
 	given_phone_number 	= request.POST.get("phone_number") 	# in template, div name = phone_number.
 
-	# Unique phone and email check
-	'''
-	users_list_by_phone	= Profile.objects.get(phone_number = given_phone_number)
+	# Unique username, mail and email check
 
+	users_list_by_username = User.objects.filter(username = given_username)
+	if (users_list_by_username): #there is a user with this username
+
+		request.session["msg"] = "This username already exists"
+		return render(request, 'polls/register.html', {})
+
+	users_list_by_phone = Profile.objects.filter(phone_number = given_phone_number)
 	if (users_list_by_phone): #there is a user with this phone number
-		return render(request, 'polls/register.html', {"msg":"This phone number already exists"})
 
-	users_list_by_username	= User.objects.get(username=given_username)
-	if (users_list_by_phone): #there is a user with this username
-		return render(request, 'polls/register.html', {"msg":"This username already exists"})
+		request.session["msg"] = "This phone number already exists"
+		return render(request, 'polls/register.html', {})
+
+	users_list_by_email	= User.objects.filter(email = given_email)
+	if (users_list_by_email): #there is a user with this username
+
+		request.session["msg"] = "This email already exists"
+		return render(request, 'polls/register.html', {})
 
 
 	new_user = User.objects.create_user(username=given_username, \
@@ -117,11 +148,11 @@ def register(request):
 
 	new_user.profile.phone_number = given_phone_number
 	new_user.save()
- 	'''
-	return render(request, 'polls/is_register.html', {"is_register":"true", 'msg' : 'register success'})
+ 	
+	return render(request, 'polls/is_register.html', {"is_register":"true"})
 
 
-def logout(request):
+def logout_user(request):
 	"""	
 		Logout method
 	"""
