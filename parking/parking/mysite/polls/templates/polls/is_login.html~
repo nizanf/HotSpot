@@ -7,18 +7,16 @@
 </head>
 
 
-<body onload="myFunction()">
+<body>
 
 <script type = "text/javascript" >
 
-	alert({{is_login}});
-	var is_login = {{is_login}};
 
-	if (is_login == "true"){
-		alert("in true");
+	var is_login = String({{is_login}});
+
+	if (is_login){
 		location.href="/homepage";
 	} else {
-		alert("in false");
 		location.href="/";
 	}
 

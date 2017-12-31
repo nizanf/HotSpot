@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Register</title>
 
 </head>
 
@@ -11,14 +11,11 @@
 
 <script type = "text/javascript" >
 
-	alert({{is_register}});
-	var is_login = {{is_register}};
+	var is_register = {{is_register}};
 
 	if (is_register){
-		alert("in true");
 		location.href="/";
 	} else {
-		alert("in false");
 		location.href="/register";
 	}
 

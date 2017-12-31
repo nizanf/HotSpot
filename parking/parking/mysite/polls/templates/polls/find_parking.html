@@ -2,23 +2,27 @@
 <html>
 <head>
   <title>Find Parking</title>
-  <link rel="stylesheet" type="text/css" href="_css/HotSpot.css">
-  <link rel="stylesheet" type="text/css" href="_css/find_parking.css">
+
+	{% load static %}
+
+  	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
+  	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
 </head>
 
 <body>
   <div class="all_site">
       <header>
-        <!-- logo line -the head line of all pages   -->
-        <div class="logo">
-              <img src="_images/cars.JPG" height="49"/>          
+          <div class="logo">
+		{% load static %}
+              	<img src="{% static "_images/cars.jpg" %}" height="49"/>          
           </div>  
           <nav>
               <ul>
-                  <a href="history.html"><li>My History</li></a>
-                  <a href="HotSpot.html"><li>Home Page</li></a>
+                  <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                  <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
               </ul>
           </nav>
+      
           <!-- background picture define in find_parking.css -->
           <div class="back"></div>
           

@@ -11,15 +11,15 @@
 
 <script type = "text/javascript" >
 
-	alert({{is_login}});
-	var is_login = {{is_login}};
+	alert({{is_register}});
+	var is_register = {{is_register}};
 
-	if (is_login){
+	if (is_register){
 		alert("in true");
-		location.href="/homepage";
+		location.href="/";
 	} else {
 		alert("in false");
-		location.href="/";
+		location.href="/register";
 	}
 
 

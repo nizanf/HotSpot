@@ -3,7 +3,7 @@
 
 <head>
   <!-- <meta charset="UTF-8"> -->
-	<title>History</title> 
+	<title>History</title>
 	<meta charset="utf-8">
 	
   <meta charset="utf-8">
@@ -27,18 +27,19 @@
 
 <body>
 	<div class="all_site">
-	<link rel="stylesheet" type="text/css" href="_css/History.css">
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/History.css" %}">
     
      
     <div class="body">
         <header>
             <div class="logo">
-                <img src="_images/cars.JPG" height="49"/>          
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
             </div>
             <nav>
                 <ul>
-                    <a href="HotSpot.html"><li>Home Page</li></a>
-                    <a href="sign_up.html"><li>SIGN UP</li></a>  
+                    <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>  
                     <!-- TODO GO BACK TO THE LAST PAGE   -->
                 </ul>
             </nav>

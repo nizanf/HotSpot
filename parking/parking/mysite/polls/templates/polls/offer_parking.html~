@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+      
+  	<title>Offer Parking</title>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static "_css/HotSpot.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "_css/find_parking.css" %}">
+</head>
+
+<body>
+  <div class="all_site">
+      <header>
+          <div class="logo">
+              <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+          </div>  
+          <nav>
+              <ul>
+                  <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                  <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
+              </ul>
+          </nav>
+          <div class="back"></div>
+      
+          <div id="map"></div>
+            
+          <div id="form">
+                <table>
+                    <tr><td>Name:</td> <td><input type='text' id='name'/> </td> </tr>
+                    <tr><td>Address:</td> <td><input type='text' id='address'/> </td> </tr>
+                    <tr><td>Time:</td> <td> <input type="time"  id='Time'/> </td> </tr>
+                    <tr><td>Parking Size:</td> <td><select id='type'> +
+                        <option value='small'>small</option>
+                        <option value='medium' SELECTED>medium</option>
+                        <option value='Large'>Large</option>
+                        </select> </td></tr>
+                        <tr><td></td><td><input type='button' value='Save' onclick='saveData()'/></td></tr>
+                </table>
+            </div>
+            <div id="message">Location saved</div>
+            <script>
+                var map;
+                var marker;
+                var infowindow;
+                var messagewindow;
+
+
+            function initMap(){
+                //map options
+                var mapCanvas = document.getElementById("map");
+                var myCenter = new google.maps.LatLng(32.121678, 34.791143);
+                var mapOptions = {center: myCenter, zoom: 10};
+                //new map
+                var map = new google.maps.Map(mapCanvas,mapOptions);
+               
+                infowindow = new google.maps.InfoWindow({
+                    content: document.getElementById('form')
+                });
+            
+                messagewindow = new google.maps.InfoWindow({
+                    content: document.getElementById('message')
+                });
+
+                google.maps.event.addListener(map, 'click', function(event) {
+                    marker = new google.maps.Marker({
+                        position: event.latLng,
+                        map: map
+                    });
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infowindow.open(map, marker);
+                    });
+                });
+      }
+      function saveData() {
+        var name = escape(document.getElementById('name').value);
+        var address = escape(document.getElementById('address').value);
+        var type = document.getElementById('type').value;
+        var latlng = marker.getPosition();
+        var url = 'phpsqlinfo_addrow.php?name=' + name + '&address=' + address +
+                  '&type=' + type + '&lat=' + latlng.lat() + '&lng=' + latlng.lng();
+
+        downloadUrl(url, function(data, responseCode) {
+
+          if (responseCode == 200 && data.length <= 1) {
+            infowindow.close();
+            messagewindow.open(map, marker);
+          }
+        });
+      }
+
+      function downloadUrl(url, callback) {
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+          if (request.readyState == 4) {
+            request.onreadystatechange = doNothing;
+            callback(request.responseText, request.status);
+          }
+        };
+
+        request.open('GET', url, true);
+        request.send(null);
+      }
+
+      function doNothing () {
+      }
+
+
+
+
+                // //Listen for click on map
+                //     google.maps.event.addListener(map,'click', function(event) {
+                //         //add marker
+                //         addMarker({coords:event.latLng});
+                //     }); 
+                    
+                //     function addMarker(props){
+                //     var marker = new google.maps.Marker({
+                //     position: props.coords,
+                //     map:map
+                //     //TODO if we want change image of marker
+                //     //icon
+                //     });   
+                // }
+         
+            </script>
+            
+
+            
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
+            
+        </header>
+        <footer>
+            find your spot
+        </footer>  
+        <p class="clear"></p>  
+
+    </div>  
+</body>
+</html>

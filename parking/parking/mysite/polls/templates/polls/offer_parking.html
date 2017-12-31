@@ -4,21 +4,22 @@
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
         <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
       
-  <title>Offer Parking</title>
-  <link rel="stylesheet" type="text/css" href="_css/HotSpot.css">
-  <link rel="stylesheet" type="text/css" href="_css/find_parking.css">
+  	<title>Offer Parking</title>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
 </head>
 
 <body>
   <div class="all_site">
       <header>
           <div class="logo">
-              <img src="_images/cars.JPG" height="49"/>          
+              <img src="{% static "_images/cars.jpg" %}" height="49"/>          
           </div>  
           <nav>
               <ul>
-                  <a href="history.html"><li>My History</li></a>
-                  <a href="HotSpot.html"><li>Home Page</li></a>
+                  <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                  <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
               </ul>
           </nav>
           <div class="back"></div>

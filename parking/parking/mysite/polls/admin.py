@@ -7,4 +7,5 @@ from .models import Profile, Purchase
 
 # Register your models here.
 
+admin.site.register(Profile)
 admin.site.register(Purchase)
