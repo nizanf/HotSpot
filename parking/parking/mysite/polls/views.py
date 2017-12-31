@@ -9,14 +9,13 @@ import time
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
-from django.contrib.auth import authenticate
-from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from .models import Profile, Purchase
 from django.core import serializers
 from random import randint
 import json
 from time import gmtime, strftime
+from django.contrib.auth import authenticate, login, logout
 
 
 
@@ -32,7 +31,7 @@ def call_login(request):
 	return render(request, 'polls/login.html')
 
 def call_homepage(request):
-	return render(request, 'polls/HotSpot.html')
+	return render(request, 'polls/hotspot.html')
 
 def call_register(request):
 	return render(request, 'polls/register.html')
@@ -82,6 +81,8 @@ def login_user(request):
 	  		return render(request, 'polls/is_login.html', {"is_login":"false"})
 	  	
 	  	# Success
+		login(request, user)
+		
 	  	request.session['login_failures'] = 0
 	  	request.session['last_failure'] = None
 		return render(request, 'polls/is_login.html', {"is_login":"true"})
@@ -90,8 +91,7 @@ def login_user(request):
 	else: # login failed	
 		print("failed")
 		request.session['login_failures'] = request.session['login_failures'] + 1 if 'login_failures' in request.session else 1
-		request.session['last_failure'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-
+		request.session['last_failure'] = strftime("%Y-%m-%d %H:%M:%S", datetime.datetime.now())
 	  	request.session["msg"] = "username or password incorrect!"
 	  	return render(request, 'polls/is_login.html', {"is_login":"false"})
 
@@ -217,25 +217,45 @@ def report_free_parking(request):
 
 	# TODO: Add event log
 
-	return render(request, 'polls/homepage.html')
+	return render(request, 'polls/hotspot.html')
 
+
+def clear_msg(request):
+   	if request.is_ajax() and request.method=='POST':
+   		print(request.session['msg'])
+
+        request.session['msg'] = ""
+        print(request.session['msg'])
+        return HttpResponse("cleared message")
 
 def offer_new_parking(request):
-	
-	given_seller_id 		= request.user.pk  						# User id
-	given_parking_address 	= request.POST.get("location") 			
-	given_parking_time 		= request.POST.get("parking_time")
-	
-	purchase 				= Purchase(	purchase_id =getPurchaseID(), seller_id = given_seller_id,\
-									 	parking_address = given_parking_address, \
-									 	parking_time = given_parking_time)
+
+	request.session["msg"] = ""
+
+	given_seller_id 		= int(request.user.pk)  
+	print("given_seller_id  = "+str(given_seller_id))
 
 
-	# TODO: Add event log
+	if (Purchase.objects.filter(seller_id = given_seller_id, status = "available") or Purchase.objects.filter(seller_id = given_seller_id, status = "in process")):
+		print("here!!")
+		request.session["msg"] = "You already submitted a parking!!!"
+		return render(request, 'polls/hotspot.html')
+
+
+	given_parking_address 		= 'bbb'#request.POST.get("address") 	
+	print("given_parking_address = "+str(given_parking_address))
+
+	given_parking_time_in_minutes		= int(request.POST.get("time"))
+
+	now = datetime.datetime.now()
+	given_parking_time = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
+
+	print("given_parking_time = "+str(given_parking_time))
+	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time)
 
 	purchase.save()
 
-	return render(request, 'polls/homepage.html')
+	return render(request, 'polls/hotspot.html')
 
 
 def search_parking(request):
@@ -403,7 +423,7 @@ def buyer_cancel_parking(request):
 		chosen_parking.parking_rate = -1
 		chosen_parking.save()
 
-	return render(request, 'polls/homepage.html')
+	return render(request, 'polls/hotspot.html')
 
 
 # when seller insert the pincode 
@@ -466,7 +486,7 @@ def seller_cancel_parking(request):
 		if (offered_parking.status == "available"): # no harm done
 			offered_parking.delete()
 			offered_parking.lock.release()
-			return render(request, 'polls/homepage.html')
+			return render(request, 'polls/hotspot.html')
 
 		else : # Someone already bought the parking
 			reset_parking(offered_parking, buyer_id, "canceled",-1,offered_parking.target_address,-1)
@@ -481,7 +501,7 @@ def seller_cancel_parking(request):
 			#TODO: notify buyer
 			buyer_user.save()
 
-	return render(request, 'polls/homepage.html')
+	return render(request, 'polls/hotspot.html')
 
 
 def generate_new_pin_code():

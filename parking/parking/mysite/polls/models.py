@@ -5,10 +5,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from decimal import Decimal
+
+
 
 # for lock 
 import threading
 import time
+import datetime
 
 class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -38,15 +42,14 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Purchase(models.Model):
-#	purchase_id		= models.IntegerField(default=-1)
 	buyer_id		= models.IntegerField(default=-1) 	# user id
 	seller_id		= models.IntegerField(default=-1) 	# user id
 	cost 			= models.IntegerField(default=10)
-	parking_time 	= models.DateTimeField() #  max 30 minutes from the offering time
-	status 			= models.CharField(max_length=200, default="available") # available, in process, done, canceled irrelevent etc.
-	parking_rate 	= models.DecimalField(max_digits = 3, decimal_places=3, default=-1) #distance between target address and parking address. 
-	target_address 	= models.CharField(max_length=200) #coordinates of target address. (x,y)
-	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
+	parking_time 	= models.DateTimeField(default=datetime.datetime.now, blank=True)#DateTimeField(default=datetime.datetime.now()) #  max 30 minutes from the offering time
+	status 			= models.CharField(max_length=200000000, default="available") # available, in process, done, canceled irrelevent etc.
+	parking_rate 	= models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
+	target_address 	= models.CharField(max_length=200000) #string. full address
+	parking_address = models.CharField(max_length=200000) #string. full address
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	pin_code		= models.IntegerField(default=-1)

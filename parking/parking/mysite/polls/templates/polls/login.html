@@ -44,10 +44,21 @@
 
 <script type = "text/javascript" >
 
-	var msg = '{{ request.session.msg }}';
-	if (msg != ""){
-		alert(msg);
-	}	
+    var msg = '{{ request.session.msg }}';
+    if (msg != ""){
+        alert(msg);
+        clearMsg();
+    }
+
+    function clearMsg() {
+
+        $.ajax({
+            type: "POST",
+            url:"/clear_msg/",
+            data: { 'csrfmiddlewaretoken': '{{csrf_token}}' }, 
+
+        } );
+    };
 
 </script>
 

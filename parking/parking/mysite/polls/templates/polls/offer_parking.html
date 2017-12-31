@@ -28,15 +28,28 @@
             
           <div id="form">
                 <table>
-                    <tr><td>Name:</td> <td><input type='text' id='name'/> </td> </tr>
-                    <tr><td>Address:</td> <td><input type='text' id='address'/> </td> </tr>
-                    <tr><td>Time:</td> <td> <input type="time"  id='Time'/> </td> </tr>
-                    <tr><td>Parking Size:</td> <td><select id='type'> +
+
+		<form name="form" method="post" action="{% url 'polls:offer_new_parking' %}" >
+			{% csrf_token %}
+
+                    <tr><td>Address:</td> <td><input type='text' name ='address'  id='address'/> </td> </tr>
+                    <tr><td>Time:</td> <td><select id='time' name = 'time'> +
+                        <option value=0 SELECTED>now</option>
+                        <option value=5>5 min</option>
+                        <option value=10>10 min</option>
+                        <option value=15>15 min</option>
+                        <option value=20>20 min</option>
+                        <option value=25>25 min</option>
+                        <option value=30>30 min</option>
+
+                        </select> </td></tr>
+
+                    <tr><td>Parking Size:</td> <td><select id='type' name = 'size'> +
                         <option value='small'>small</option>
                         <option value='medium' SELECTED>medium</option>
                         <option value='Large'>Large</option>
                         </select> </td></tr>
-                        <tr><td></td><td><input type='button' value='Save' onclick='saveData()'/></td></tr>
+                        <tr><td></td><td><input type='submit' value='Submit'></td></tr>
                 </table>
             </div>
             <div id="message">Location saved</div>
