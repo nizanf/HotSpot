@@ -43,6 +43,22 @@ def call_heatmap(request):
 	return render(request, 'polls/heatmap.html')
 
 def call_history(request):
+
+	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
+	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
+	all_free_spot = FreeSpot.objects.all()
+	
+	free_spot = []	
+
+	for spot in all_free_spot:
+
+		reporters_ids_list = json.loads(reporters_ids_json)
+		if request.user.pk in reporters_ids_list:
+			free_spot.append(spot)_ids_list)
+
+
+	
+
 	return render(request, 'polls/history.html')
 
 def call_offer(request):
@@ -91,7 +107,8 @@ def login_user(request):
 	else: # login failed	
 		print("failed")
 		request.session['login_failures'] = request.session['login_failures'] + 1 if 'login_failures' in request.session else 1
-		request.session['last_failure'] = strftime("%Y-%m-%d %H:%M:%S", datetime.datetime.now())
+		print("\n\n\n " + str(time.localtime()) + " \n\n\n")
+		request.session['last_failure'] = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 	  	request.session["msg"] = "username or password incorrect!"
 	  	return render(request, 'polls/is_login.html', {"is_login":"false"})
 
@@ -163,9 +180,16 @@ def logout_user(request):
 def report_free_parking(request):
 
 	given_reporter_id 		= request.user.pk  		# user id
-	given_parking_address 	= request.POST.get("location")
-	given_parking_time 		= request.POST.get("parking_time")
-	given_parking_street	= request.POST.get("parking_street")
+	given_parking_address 		= request.POST.get("location")
+	given_parking_time_in_minutes		= int(request.POST.get("parking_time"))
+
+	now = datetime.datetime.now()
+	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
+
+	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
+
+
+	given_parking_street		= request.POST.get("parking_street")
 
 	# Get all parking in the street
 	parking_in_street = FreeParking.objects.get(street_name=given_parking_street)
@@ -233,24 +257,21 @@ def offer_new_parking(request):
 	request.session["msg"] = ""
 
 	given_seller_id 		= int(request.user.pk)  
-	print("given_seller_id  = "+str(given_seller_id))
-
 
 	if (Purchase.objects.filter(seller_id = given_seller_id, status = "available") or Purchase.objects.filter(seller_id = given_seller_id, status = "in process")):
-		print("here!!")
 		request.session["msg"] = "You already submitted a parking!!!"
 		return render(request, 'polls/hotspot.html')
 
 
 	given_parking_address 		= 'bbb'#request.POST.get("address") 	
-	print("given_parking_address = "+str(given_parking_address))
 
-	given_parking_time_in_minutes		= int(request.POST.get("time"))
+	given_parking_time_in_minutes	= int(request.POST.get("time"))
 
 	now = datetime.datetime.now()
-	given_parking_time = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
+	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
 
-	print("given_parking_time = "+str(given_parking_time))
+	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
+
 	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time)
 
 	purchase.save()
@@ -260,14 +281,22 @@ def offer_new_parking(request):
 
 def search_parking(request):
 	given_target_address 	= request.POST.get("target_location") 	# TODO: Verify nizan give us the location
-	radius 					= int(request.POST.get("radius")) 		
-	parking_time 			= request.POST.get("parking_time") 		# TODO: Verify nitzan give us the location
+	radius 			= int(request.POST.get("radius")) 		
 
-	relevant_parkings 		= get_parkings_by_radius(given_target_address, radius, parking_time)
-	relevant_free_parkings 	= get_free_parkings_by_radius(given_target_address, radius, parking_time)
+	given_parking_time_in_minutes		= int(request.POST.get("parking_time"))
+
+	now = datetime.datetime.now()
+	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
+
+	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
+
+
+
+	relevant_parkings 		= get_parkings_by_radius(given_target_address, radius, given_parking_time)
+	relevant_free_parkings 	= get_free_parkings_by_radius(given_target_address, radius, given_parking_time)
 	
-	return render(request, 'polls/show_available_parkings.html', { 'relevant_parkings' : relevant_parkings, \
-																	'relevant_free_parkings' : relevant_free_parkings })
+	return render(request, 'polls/show_available_parkings.html', { 'relevant_parkings' : relevant_parkings, 
+			'relevant_free_parkings' : relevant_free_parkings })
 
 
 def get_free_parkings_by_radius(target_address, radius, parking_time):

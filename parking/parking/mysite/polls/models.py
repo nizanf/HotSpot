@@ -42,14 +42,14 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Purchase(models.Model):
-	buyer_id		= models.IntegerField(default=-1) 	# user id
-	seller_id		= models.IntegerField(default=-1) 	# user id
-	cost 			= models.IntegerField(default=10)
-	parking_time 	= models.DateTimeField(default=datetime.datetime.now, blank=True)#DateTimeField(default=datetime.datetime.now()) #  max 30 minutes from the offering time
-	status 			= models.CharField(max_length=200000000, default="available") # available, in process, done, canceled irrelevent etc.
+	buyer_id	= models.IntegerField(default=-1) 	# user id
+	seller_id	= models.IntegerField(default=-1) 	# user id
+	cost 		= models.IntegerField(default=10)
+	parking_time 	= models.CharField(max_length=200, default="") #  max 30 minutes from the offering time
+	status 		= models.CharField(max_length=200, default="available") # available, in process, done, canceled irrelevent etc.
 	parking_rate 	= models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
-	target_address 	= models.CharField(max_length=200000) #string. full address
-	parking_address = models.CharField(max_length=200000) #string. full address
+	target_address 	= models.CharField(max_length=200) #string. full address
+	parking_address = models.CharField(max_length=200) #string. full address
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	pin_code		= models.IntegerField(default=-1)
@@ -69,10 +69,9 @@ class Purchase(models.Model):
 
 
 
-
 class FreeSpot(models.Model):
 	reporters_ids	= models.CharField(default="", max_length = 20000) 	# user id
-	last_report_time= models.DateTimeField() #  max 30 minutes from the offering time
+	last_report_time= models.CharField(max_length=200, default="") #  max 30 minutes from the offering time
 	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
 	street_name		= models.CharField(max_length=200) # Parking street name
 	lock 			= threading.Lock()
