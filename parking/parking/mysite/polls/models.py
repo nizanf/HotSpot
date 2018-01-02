@@ -46,10 +46,17 @@ class Purchase(models.Model):
 	seller_id	= models.IntegerField(default=-1) 	# user id
 	cost 		= models.IntegerField(default=10)
 	parking_time 	= models.CharField(max_length=200, default="") #  max 30 minutes from the offering time
-	status 		= models.CharField(max_length=200, default="available") # available, in process, done, canceled irrelevent etc.
+	status 		= models.CharField(max_length=200, default="available") # available, in process, done, canceled, expired etc.
 	parking_rate 	= models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
+	
 	target_address 	= models.CharField(max_length=200) #string. full address
+	target_address_lat = models.CharField(max_length=2000)
+	target_address_lng = models.CharField(max_length=2000)
+	
 	parking_address = models.CharField(max_length=200) #string. full address
+	parking_address_lat = models.CharField(max_length=2000)
+	parking_address_lng = models.CharField(max_length=2000)
+
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	pin_code		= models.IntegerField(default=-1)

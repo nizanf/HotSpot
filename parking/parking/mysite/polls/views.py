@@ -25,7 +25,10 @@ TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
 THRESHOLD_RATING_TO_FREE_SPOT = 5
 FREE_PARKING_EXISTENCE_TIME = 30
-
+FREE_PARKING_RATING_REWARD = 1.1
+FREE_PARKING_POINTS_REWARD = 2
+MAX_POINTS = 1000000
+MAX_RATING = 5
 
 def call_login(request):
 	return render(request, 'polls/login.html')
@@ -37,7 +40,7 @@ def call_register(request):
 	return render(request, 'polls/register.html')
 
 def call_report(request):
-	return render(request, 'polls/find_parking.html')
+	return render(request, 'polls/report_parking.html')
 
 def call_heatmap(request):
 	return render(request, 'polls/heatmap.html')
@@ -45,7 +48,6 @@ def call_heatmap(request):
 def call_history(request):
 
 	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
-	print("\n\n\n "+ sell_purchase[0].class_name() + " \n\n\n")
 	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
 	all_free_spot = FreeSpot.objects.all()
 	
@@ -211,23 +213,31 @@ def logout_user(request):
 	logout(request)
 	return render(request, 'polls/login.html')
 
+def extract_street_name(parking_address):
+	if (" St " in parking_address):
+		return parking_address.split(" St ")[0]
+	else:
+		return parking_address.split(",")[0]
 
 def report_free_parking(request):
 
-	given_reporter_id 		= request.user.pk  		# user id
-	given_parking_address 		= request.POST.get("location")
-	given_parking_time_in_minutes		= int(request.POST.get("parking_time"))
 
-	now = datetime.datetime.now()
-	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
+	given_lat = request.POST.get("lat_address")
+	given_lng = request.POST.get("lng_address")
+	
+	request.session["msg"] = ""
 
-	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
+	given_parking_address 		= request.POST.get("address") 	
+
+	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	given_reporter_id 		= request.user.pk 
 
 
-	given_parking_street		= request.POST.get("parking_street")
+	given_street_name = extract_street_name(given_parking_address)
 
 	# Get all parking in the street
-	parking_in_street = FreeParking.objects.get(street_name=given_parking_street)
+	parking_in_street = FreeSpot.objects.filter(street_name=given_street_name)
+
 
 	found_valid_parking = False
 
@@ -235,7 +245,7 @@ def report_free_parking(request):
 
 		for parking in parking_in_street:
 			
-			diff_time = diff_minutes(parking.parking_time)
+			diff_time = diff_minutes(parking.last_report_time)
 
 			# If the parking is still relvent
 			if diff_time < FREE_PARKING_EXISTENCE_TIME:
@@ -244,6 +254,10 @@ def report_free_parking(request):
 
 				reporters_ids_json = parking.reporters_ids
 				reporters_ids_list = json.loads(reporters_ids_json)
+				
+				if (given_reporter_id in reporters_ids_list):
+					break
+
 				reporters_ids_list.append(given_reporter_id)
 				reporters_ids_json = json.dumps(reporters_ids_list)
 				parking.reporters_ids = reporters_ids_json
@@ -252,8 +266,10 @@ def report_free_parking(request):
 				# If there is enough rating of reporters to verify
 				# the parking
 				if parking.is_verified:
-					# TODO: add rank/points to given_reporter_id user
-					pass
+					# Update rank/points to given_reporter_id user
+					reporter_user = User.objects.get(pk=given_reporter_id)
+					update_rating_for_user(reporter_user,'report')
+						
 
 				# If the parking rank is over the threshold - add points to 
 				# the reporters and show it in the map
@@ -261,9 +277,10 @@ def report_free_parking(request):
 					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 						parking.is_verified = 1
 						for usr_id in free_parking:
-							#TODO: add rank/points
-							pass
-
+							# Update rank/points to given_reporter_id user
+							reporter_user = User.objects.get(pk=user_id)
+							update_rating_for_user(reporter_user,'report')
+							
 
 				parking.save()
 				break
@@ -271,7 +288,7 @@ def report_free_parking(request):
 
 	# If we did not find the parking - add to the list
 	if not found_valid_parking:
-		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), parking_time = given_parking_time, parking_address = parking_in_street, street_name = parking_in_street, parking_rank = request.user.profile.rating)
+		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), last_report_time = given_parking_time, parking_address = given_parking_address, street_name = given_street_name, parking_rank = request.user.profile.rating)
 		free_parking.save()
 
 	# TODO: Add event log
@@ -287,6 +304,18 @@ def clear_msg(request):
         print(request.session['msg'])
         return HttpResponse("cleared message")
 
+
+def update_user_spots_status(given_seller_id):
+	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = "available")
+	for spot in sell_spot_list:
+		if (spot.status == "available" or spot.status == "in process"):
+			if (diff_minutes(spot.parking_time) < 0):
+				spot.status = "expired"
+				spot.save()
+
+
+
+
 def offer_new_parking(request):
 
 	given_lat = request.POST.get("lat_address")
@@ -295,6 +324,8 @@ def offer_new_parking(request):
 	request.session["msg"] = ""
 
 	given_seller_id 		= int(request.user.pk)  
+
+	update_user_spots_status(given_seller_id)
 
 	if (Purchase.objects.filter(seller_id = given_seller_id, status = "available") or Purchase.objects.filter(seller_id = given_seller_id, status = "in process")):
 		request.session["msg"] = "You already submitted a parking!!!"
@@ -310,7 +341,7 @@ def offer_new_parking(request):
 
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 
-	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time)
+	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng)
 
 	purchase.save()
 
@@ -530,7 +561,7 @@ def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
 	purchase.buyer_id			= buyer_id 	# user id
 	purchase.status 			= status
    	purchase.parking_rate 		= rate  
-	purchase.target_address 	= target_address
+	purchase.target_address 	= target_address*=
 	purchase.pin_code			= pincode
 	offered_parking.save()
 
@@ -581,6 +612,10 @@ def authenticate_pincode(provided_pincode, actual_pincode):
 
 def update_rating_for_user(user, status):
 
+	if (status == 'report'):
+		user.rank *= FREE_PARKING_RATING_REWARD # Gal
+		user.points += FREE_PARKING_POINTS_REWARD
+
 	# Stage 2
 
 	# diff = 0
@@ -593,7 +628,10 @@ def update_rating_for_user(user, status):
 	# user.rating += diff
 	# user.save()
 	pass
-
+	
+	user.rank = min(user.rank, MAX_RATING)
+	user.points = min(user.points, MAX_POINTS)
+	user.save()
 
 # Polling 
 '''

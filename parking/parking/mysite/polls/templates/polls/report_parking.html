@@ -29,7 +29,7 @@
           <div id="form">
                 <table>
 
-		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
+		<form name="form" method="post" action="{% url 'polls:report_free_parking'  %}" >
 			{% csrf_token %}
 
                     <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>

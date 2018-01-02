@@ -19,6 +19,8 @@ urlpatterns = [
     url(r'^history/$', views.call_history, name='call_history'),
 
     url(r'^offer_new_parking/$', views.offer_new_parking, name='offer_new_parking'),
+    url(r'^report_free_parking/$', views.report_free_parking, name='report_free_parking'),
+
     url(r'^clear_msg/$', views.clear_msg, name='clear_msg'),
 
 ]
