@@ -14,11 +14,29 @@ header .back{
     }
     
 
-  
     #map{
+        position: absolute;
         margin-top: 10%;
-        width:80%;
-        height:90%;
-        margin-left:10%;
         margin-bottom: 10%;
+        width:50%;
+        height:60%;
+        margin-left:40%;
+        margin-right:50px;
+        padding: 0;
+        z-index: 5;
     }
+
+    #floating-panel {
+        position: absolute;
+        margin-top: 10%;
+        left: 10%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+        z-index: 5;
+      }
