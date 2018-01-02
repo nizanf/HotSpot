@@ -28,38 +28,25 @@
       
           <!-- background picture define in find_parking.css -->
           <div class="back"></div>
-          
-          <!-- the map windoe -->
-          <div id="map"></div>
+          <div id="floating-panel">
+            <input id="address" type="textbox" value="Tel Aviv">
+            <input id="submit" type="button" value="Find Parking"><br>
+            <input id="distance" type="textbox" value="100 m">
+            <input id="submit" type="button" value="choose distance">
+            </div>
 
-            <body>
-            <div class="all_site">
-                <header>
-                    <!-- logo line -the head line of all pages   -->
-                    <div class="logo">
-                        <img src="_images/cars.JPG" height="49"/>          
-                    </div>  
-                    <nav>
-                        <ul>
-                            <a href="history.html"><li>My History</li></a>
-                            <a href="HotSpot.html"><li>Home Page</li></a>
-                        </ul>
-                    </nav>
-                    <!-- background picture define in find_parking.css -->
-                    <div class="back"></div>
-                    <div id="floating-panel">
-                        <input id="address" type="textbox" value="Sydney, NSW">
-                        <input id="submit" type="button" value="Find Parking">
-                    </div>
-
-
-                    <!-- the map windoe -->
-                    <div id="map"></div>
+                <!-- the map windoe --> 
+             <div id="map"></div>
+                    
 
                     </header>
                     <script>
+                        var marker;
+                        var infoWindow;
                         function initMap(){
                             //map options
+
+                            
                             var mapCanvas = document.getElementById("map");
                             var myCenter = new google.maps.LatLng(32.121678, 34.791143);
                             var mapOptions = {center: myCenter, zoom: 14};
@@ -71,7 +58,7 @@
                             document.getElementById('submit').addEventListener('click', function() {
                             geocodeAddress(geocoder, map);
                             });
-                                
+    
                             // Array off markers- Parking spaces published
                             //TODO: how to get coords from database  
                             var markers = [
@@ -92,7 +79,8 @@
 
                             //add marker function
                             function addMarker(props){
-                                var marker = new google.maps.Marker({
+
+                                marker = new google.maps.Marker({
                                 position: props.coords,
                                 map:map
                                 //TODO if we want change image of marker
@@ -101,7 +89,7 @@
 
                                 
                                 //TODO Add the seller's name and rating
-                                var infoWindow = new google.maps.InfoWindow({
+                                infoWindow = new google.maps.InfoWindow({
                                     content:  props.content
                                 });
 
