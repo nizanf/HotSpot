@@ -55,6 +55,10 @@ class Purchase(models.Model):
 	pin_code		= models.IntegerField(default=-1)
 	attempt_failure = 0
 
+
+	def class_name(self):
+    		return Purchase.__name__
+
 	def wait_lock(self, timeout):
 		with self.cond:
 			current_time = start_time = time.time()
@@ -78,6 +82,9 @@ class FreeSpot(models.Model):
 	cond 			= threading.Condition(threading.Lock())
 	parking_rank	= models.IntegerField(default=0) # start with rating 0
 	is_verified		= models.IntegerField(default=0) # start with rating 0
+
+	def class_name(self):
+    		return FreeSpot.__name__
 
 	def wait_lock(self, timeout):
 		with self.cond:

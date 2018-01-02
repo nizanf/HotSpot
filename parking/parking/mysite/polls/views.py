@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.models import User
-from .models import Profile, Purchase
+from .models import Profile, Purchase, FreeSpot
 from django.core import serializers
 from random import randint
 import json
@@ -45,6 +45,7 @@ def call_heatmap(request):
 def call_history(request):
 
 	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
+	print("\n\n\n "+ sell_purchase[0].class_name() + " \n\n\n")
 	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
 	all_free_spot = FreeSpot.objects.all()
 	
@@ -54,12 +55,45 @@ def call_history(request):
 
 		reporters_ids_list = json.loads(reporters_ids_json)
 		if request.user.pk in reporters_ids_list:
-			free_spot.append(spot)_ids_list)
+			free_spot.append(spot)
+
+	all_history = list(sell_purchase) + list(buy_purchase) + list(free_spot)
 
 
-	
+	all_history.sort(key=lambda x: datetime.datetime.strptime(x.parking_time, "%Y-%m-%d %H:%M:%S") if x.class_name() == "Purchase" else datetime.datetime.strptime(x.last_report_time, "%Y-%m-%d %H:%M:%S"), reverse=True)
 
-	return render(request, 'polls/history.html')
+
+	history_as_table = []
+
+	for element in all_history:
+		address = element.parking_address
+
+		if element.class_name() == "Purchase":
+			elemnt_type = "Purchase"
+			date_and_time = element.parking_time
+			if (element.seller_id == request.user.pk):
+				if (element.buyer_id == -1):
+					buyer_username = "--"
+				else:
+					buyer_username = User.objects.get(pk = element.buyer_id).username
+				seller_username = "Me"
+			else:
+				if (element.seller_id == -1):
+					seller_username = "--"
+				else:
+					seller_username = User.objects.get(pk = element.seller_id).username
+				buyer_username = "Me"
+				
+		else:
+			elemnt_type = "Report"
+			date_and_time = element.last_report_time
+			buyer_username = "--"
+			seller_username = "Me"
+
+		current_row = [elemnt_type, address, date_and_time, buyer_username, seller_username]
+		history_as_table.append(current_row)
+
+	return render(request, 'polls/history.html', {'history_as_table':history_as_table})
 
 def call_offer(request):
 	return render(request, 'polls/offer_parking.html')
