@@ -95,6 +95,7 @@ def call_history(request):
 
 	return render(request, 'polls/history.html', {'history_as_table':history_as_table})
 
+
 def call_offer(request):
 	return render(request, 'polls/offer_parking.html')
 
