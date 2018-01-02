@@ -282,12 +282,15 @@ def clear_msg(request):
    	if request.is_ajax() and request.method=='POST':
    		print(request.session['msg'])
 
-        request.session['msg'] = ""
+        request.session['msg'] = "" 
         print(request.session['msg'])
         return HttpResponse("cleared message")
 
 def offer_new_parking(request):
 
+	given_lat = request.POST.get("lat_address")
+	given_lng = request.POST.get("lng_address")
+	
 	request.session["msg"] = ""
 
 	given_seller_id 		= int(request.user.pk)  
@@ -297,7 +300,7 @@ def offer_new_parking(request):
 		return render(request, 'polls/hotspot.html')
 
 
-	given_parking_address 		= 'bbb'#request.POST.get("address") 	
+	given_parking_address 		= request.POST.get("address") 	
 
 	given_parking_time_in_minutes	= int(request.POST.get("time"))
 
