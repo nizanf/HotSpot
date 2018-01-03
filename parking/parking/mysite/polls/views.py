@@ -119,7 +119,6 @@ def aut_pincode(request):
 	if (str(pincode) == purchase.pin_code ):
 
 		purchase.status = "done"
-		print("purchase.status = "+purchase.status)
 		purchase.save()
 
 		seller_id = int(purchase.seller_id)
@@ -466,7 +465,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     on the earth (specified in decimal degrees)
     """
     # convert decimal degrees to radians 
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    lon1, lat1, lon2, lat2  = map(radians, [lon1, lat1, lon2, lat2])
     # haversine formula 
     dlon = lon2 - lon1 
     dlat = lat2 - lat1 
@@ -478,10 +477,10 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
 
 def update_spots_on_map(request):
-	print("here")
-
 
 	lat = float(request.POST.get('lat'))
+
+
 	if (not lat): 
 		lat = float(32.121678)
 
@@ -492,20 +491,14 @@ def update_spots_on_map(request):
 	radius = float(request.POST.get('radius'))
 	if (not radius): 
 		radius = 100
-	print ('1')
+
 	given_parking_time_in_minutes = int(request.POST.get('minutes'))
-	print ('2')
 	now = datetime.datetime.now()
 	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
-	print ('3')
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
-
-
 	
 	relevant_parkings 	= get_parkings_by_radius(lat, lng, radius, given_parking_time)
 	relevant_free_parkings 	= get_free_parkings_by_radius(lat, lng, radius, given_parking_time)
-
-
 
 	data = {'relevant_parkings': relevant_parkings, 'relevant_free_parkings': relevant_free_parkings}
 
@@ -524,14 +517,14 @@ def get_free_parkings_by_radius(lat1, lng1, radius, parking_time):
   	for parking in all_parkings:
 
 		if (is_free_parking_time_relevant(parking.last_report_time)):
-			lat2 = parking.parking_address_lat
-			lng2 = parking.parking_address_lng
+			lat2 = float(str(parking.parking_address_lat))
+			lng2 = float(str(parking.parking_address_lng))
 			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
 		
 		# If the parking time is relevant and the 
 		# pariking spot is available and near to dest
 			if (current_dist <= radius):
-				relevat_parkings.append(parking)
+				relevant_parkings.append(parking)
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
 
@@ -542,7 +535,7 @@ def is_free_parking_time_relevant(parking_time):
 	return (minutes_elapsed(parking_time) <= FREE_PARKING_EXISTENCE_TIME)
 
 
-def get_parkings_by_radius(lat1, lng2, radius, wanted_parking_time):
+def get_parkings_by_radius(lat1, lng1, radius, wanted_parking_time):
 	
 	all_parkings = Purchase.objects.all()
 
@@ -559,14 +552,14 @@ def get_parkings_by_radius(lat1, lng2, radius, wanted_parking_time):
 
 		if (abs(diff_in_minutes) <= THRESHOLD_RELEVANT_PARKING_TIME_DIFF):
 
-			lat2 = parking.parking_address_lat
-		 	lng2 = parking.parking_address_lng
+			lat2 = float(str(parking.parking_address_lat))
+			lng2 = float(str(parking.parking_address_lng))
 
 			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
-		
+			
 			if (current_dist <= radius and
 				parking.status == "available"):
-				relevat_parkings.append(parking)
+				relevant_parkings.append(parking)
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
 	return serialize_relevant_parking
@@ -654,8 +647,6 @@ def find_new_parking(request):
 
 def buyer_cancel_parking(request):
 	
-	print("in buyer_cancel_parking")
-
 	parking_id			= request.POST.get("purchase_id")
 	chosen_parking 		= Purchase.objects.get(pk=parking_id)
 
@@ -681,7 +672,6 @@ def buyer_cancel_parking(request):
 
 	data = {'msg': "parking canceled"}
 	return JsonResponse(data)
-
 
 
 # when seller insert the pincode 
@@ -729,7 +719,6 @@ def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
 #when to save? is the acquiere recursive?
 def seller_cancel_parking(request):
 
-	print("in seller_cancel_parking")
 
 	purchase_id			= request.POST.get("purchase_id")
 	offered_parking 		= Purchase.objects.get(pk=purchase_id)
