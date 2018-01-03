@@ -65,7 +65,9 @@
 	<th>Date&Time</th>
 	<th>Status</th>
 	<th>Address</th>
+	<th>Contact</th>
 	<th>Pincode</th>
+
       </tr>
     </thead>
     <tbody>
@@ -79,7 +81,8 @@
         		<td id="date">{{last_activity.2}}</td>
         		<td id="status">{{last_activity.3}}</td>
         		<td id="address">{{last_activity.4}}</td>
-        		<td id="pincode">{{last_activity.5}}</td>
+        		<td id="contact">{{last_activity.5}}</td>
+        		<td id="pincode">{{last_activity.6}}</td>
       		</tr>      
 
     </tbody>
@@ -87,40 +90,116 @@
 </div>
 
 
-	{% ifequal last_activity.5 "" %} <!-- check if pincode is empty. if so, it's the seller. --->
-		{% ifnotequal last_activity.6 "-1" %}
-			<button type="button" onclick = showButton() >Enter Pincode</button>
-			<input type="text" name ='pincode_text' id='pincode_text'/><input onclick = autPincode() type=button" name='aut_pincode' id='aut_pincode'>submit</input>
+
+			<button type="button" id ='pincode_button' onclick = showButton() >Enter Pincode</button>
+			<input type="text" name ='pincode_text' id='pincode_text'/><button onclick = autPincode() type=button" name='aut_pincode' id='aut_pincode'>submit</button>
 		
-		{% endifnotequal %}		
 
 
-	{% endifequal %}
+
+
+
+			<button type="button" id="cancel_button" onclick = cancelPurchase() >Cancel</button>
+
+
 
 
 <script>
 
 	window.onload = function() {
 
-		var purchase_id = '{{last_activity.6}}';
-		alert(purchase_id);
+		var purchase_id = '{{last_activity.7}}';
 
-		var pincode = document.getElementById('pincode_text');
-		pincode.style.visibility = "hidden";
 
+		var pincode_text = document.getElementById('pincode_text');
+		pincode_text.style.visibility = "hidden";
+
+		var aut_pincode = document.getElementById('aut_pincode');
+		aut_pincode.style.visibility = "hidden";
+
+
+		var status = document.getElementById('status').innerHTML;
+
+		if (status == "done" || status == "canceled"){
+
+			var cancle_button = document.getElementById('cancel_button');
+			
+			cancle_button.style.visibility = "hidden";
+
+		}
+
+		var pincode_button = document.getElementById('pincode_button');
+
+		var pincode = document.getElementById('pincode').innerHTML;
+
+		if (pincode == "" ){//in seller
+			if (status != "in process"){
+
+				pincode_button.style.visibility = "hidden";
+			}
+
+		}
 	};
+
+
+	function cancelPurchase(){
+
+		var purchase_id = '{{last_activity.7}}';
+
+		if ('{{last_activity.1}}' == "Me"){
+			var current_url  = "/seller_cancel_parking/"
+		} else {
+			var current_url  = "/buyer_cancel_parking/"
+		}
+
+		$.ajax({
+			type: "POST",
+
+			
+
+			url:current_url,
+
+		
+
+			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'purchase_id':purchase_id}, 
+			dataType: 'json',
+			async: false,
+			success : function(data) {
+				alert(data.msg)
+		
+				document.getElementById('status').innerHTML = "canceled";
+
+				var cancle_button = document.getElementById('cancel_button');
+				cancle_button.style.visibility = "hidden";
+
+
+			},
+			error : function(data) {
+				alert("cancel failed");
+			}			
+
+	
+		} );
+
+
+	}
 
 	function showButton(){
 
-		var pincode = document.getElementById('pincode_text');
-		pincode.style.visibility = "visible";
+		var pincode_text = document.getElementById('pincode_text');
+		pincode_text.style.visibility = "visible";
+
+		var aut_pincode = document.getElementById('aut_pincode');
+		aut_pincode.style.visibility = "visible";
+
+
 	}
 
 	function autPincode(){
 
 
-		var pincode = document.getElementById('pincode_text').value;
-		var purchase_id = '{{last_activity.6}}';
+		var pincode_text = document.getElementById('pincode_text').value;
+		var purchase_id = '{{last_activity.7}}';
 
 		$.ajax({
 			type: "POST",
@@ -128,7 +207,7 @@
 
 
 
-			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'pincode':pincode, 'purchase_id':purchase_id}, 
+			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'pincode':pincode_text, 'purchase_id':purchase_id}, 
 			dataType: 'json',
 			async: false,
 			success : function(data) {
@@ -137,7 +216,15 @@
 
 					alert("Pincode correct!");
 
-					document.getElementById('status').innerHTML = "done"; 
+					document.getElementById('status').innerHTML = "done";
+
+
+					var cancle_button = document.getElementById('cancel_button');
+					cancle_button.style.visibility = "hidden";
+
+			
+
+
 
 				} else {
 					alert("Pincode incorrect!");

@@ -32,6 +32,10 @@ urlpatterns = [
 
     url(r'^aut_pincode/$', views.aut_pincode, name='aut_pincode'),
 
+    url(r'^seller_cancel_parking/$', views.seller_cancel_parking, name='seller_cancel_parking'),
+
+    url(r'^buyer_cancel_parking/$', views.buyer_cancel_parking, name='buyer_cancel_parking'),
+
 
 ]
 

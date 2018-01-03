@@ -19,7 +19,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from math import radians, cos, sin, asin, sqrt
 
-
+MIN_POINTS = 0 
 TIMEOUT_RELOGIN = 10
 TIMEOUT_LOCK = 10
 TIMEOUT_AVAILABLE_PARKING = 20
@@ -71,12 +71,12 @@ def call_last_activity(request):
 
 
 	if (last_activity == None):
-		last_activity = ["", "", "", "", "", "", "-1"]
+		last_activity = ["", "", "", "", "", "", "", "-1"]
 
 		return render(request, 'polls/last_activity', {'last_activity':last_activity }) 
 
 
-	if (minutes_elapsed(last_activity.parking_time) > 0):
+	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status != "done" and last_activity.status != "canceled"):
 		last_activity.status = "expired"
 		last_activity.save()
 
@@ -84,17 +84,20 @@ def call_last_activity(request):
 
 	if (last_activity.buyer_id == -1):
 		buyer_username = "--"
+		contact = "--"
 	else:
 		buyer_username = (User.objects.get(pk = last_activity.buyer_id)).username
+		contact = (User.objects.get(pk = last_activity.buyer_id)).phone_number
 
 	if (last_activity.seller_id == request.user.pk):
 		seller_username = "Me"
 		pincode = ""
 	else:
 		buyer_username = "Me"
+		contact = (User.objects.get(pk = last_activity.seller_id)).profile.phone_number
 		pincode = last_activity.pincode
 
-	last_activity = [buyer_username, seller_username, last_activity.parking_time, last_activity.status, last_activity.parking_address, pincode, last_activity.pk]
+	last_activity = [buyer_username, seller_username, last_activity.parking_time, last_activity.status, last_activity.parking_address, contact, pincode, last_activity.pk]
 
 	return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
 	
@@ -116,6 +119,8 @@ def aut_pincode(request):
 	if (str(pincode) == purchase.pin_code ):
 
 		purchase.status = "done"
+		print("purchase.status = "+purchase.status)
+		purchase.save()
 
 		seller_id = int(purchase.seller_id)
 		
@@ -649,30 +654,34 @@ def find_new_parking(request):
 
 def buyer_cancel_parking(request):
 	
-	buyer_user_id 		= request.user.pk
-	parking_id 			= request.POST.get("parking_id")
-	chosen_parking 		= Purchase.objects.get(pk=parking_id)
-	
-	seller_id 			= chosen_parking.seller_id
-	seller_user			= User.objects.get(pk=seller_id)
+	print("in buyer_cancel_parking")
 
-	seller.points 	   += chosen_parking.cost
+	parking_id			= request.POST.get("purchase_id")
+	chosen_parking 		= Purchase.objects.get(pk=parking_id)
+
+	seller_id			= int(chosen_parking.seller_id)
+	seller_user			= User.objects.get(pk = seller_id)
+	seller.points 	   	+= chosen_parking.cost
 	seller.save()
-	
-	buyer_user 			=  User.objects.get(pk=buyer_user_id)
-	
-	update_rating_for_user(buyer_user , "cancel")
+
+	buyer_user_id  			= int(chosen_parking.buyer_id)
+	buyer_user 			= User.objects.get(pk=buyer_user_id)
+
+	buyer_user.rating *= 0.9
 
 	# TODO: Notify seller purchase is cancelled (reason: buyer cancelled) 
 
-	if chosen_parking.wait_lock(TIMEOUT_LOCK):
-		chosen_parking.status = "available"
-		chosen_parking.buyer_id = -1
-		chosen_parking.target_address = models.CharField(max_length=200)
-		chosen_parking.parking_rate = -1
-		chosen_parking.save()
+	#if chosen_parking.wait_lock(TIMEOUT_LOCK):
+	chosen_parking.status = "available"
+	chosen_parking.buyer_id = -1
+	chosen_parking.target_address = ""
+	chosen_parking.parking_rate = 0.0000
+	chosen_parking.save()
 
-	return render(request, 'polls/hotspot.html')
+
+	data = {'msg': "parking canceled"}
+	return JsonResponse(data)
+
 
 
 # when seller insert the pincode 
@@ -714,43 +723,50 @@ def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
    	purchase.parking_rate 		= rate  
 	purchase.target_address 	= target_address
 	purchase.pin_code			= pincode
-	offered_parking.save()
+	purchase.save()
 
 #TODO make sure when locking the parking dont need to save the acquiere to the database
 #when to save? is the acquiere recursive?
 def seller_cancel_parking(request):
 
+	print("in seller_cancel_parking")
 
-	seller_user			= User.objects.get(pk=request.user.pk)
-	
-	offered_parking_id 	= request.POST.get("parking_id")
-	offered_parking 	= Purchase.objects.get(pk=offered_parking_id)
+	purchase_id			= request.POST.get("purchase_id")
+	offered_parking 		= Purchase.objects.get(pk=purchase_id)
 
-	buyer_id 			= offered_parking.buyer_id
-	buyer_user 			= User.objects.get(pk=buyer_id)
+	seller_id			= int(offered_parking.seller_id)
+	seller_user			= User.objects.get(pk = seller_id)
+
+	buyer_id 			= int(offered_parking.buyer_id)
+	if (buyer_id != -1):
+		buyer_user 			= User.objects.get(pk=buyer_id)
 	
 	# Lock to edit the object 
-	if offered_parking.wait_lock(TIMEOUT_LOCK):
+	#if offered_parking.wait_lock(TIMEOUT_LOCK): TODO: what to do with the lock??? 
 		
-		if (offered_parking.status == "available"): # no harm done
-			offered_parking.delete()
-			offered_parking.lock.release()
-			return render(request, 'polls/hotspot.html')
+	if (offered_parking.status == "available"): # no harm done
+		offered_parking.status == "canceled"
+		#offered_parking.lock.release()
+		offered_parking.save()
 
-		else : # Someone already bought the parking
-			reset_parking(offered_parking, buyer_id, "canceled",-1,offered_parking.target_address,-1)
-			offered_parking.lock.release()
 
-			update_rating_for_user(seller, "canceled")
-			update_rating_for_user(buyer_user, "Irrelevent")
-			
-			seller.points 	   -= (2*chosen_parking.cost) 			# Fine seller
-			seller.save()
-			buyer_user.points  += (2*chosen_parking.cost) 			# Compensate buyer
-			#TODO: notify buyer
-			buyer_user.save()
+	else : # Someone already bought the parking
+		reset_parking(offered_parking, buyer_id, "canceled",-1,offered_parking.target_address,-1)
+		#offered_parking.lock.release()
 
-	return render(request, 'polls/hotspot.html')
+		seller_user.rating *= 0.9
+		#	update_rating_for_user(buyer_user, "Irrelevent")
+		
+		seller.points 	   = (2*chosen_parking.cost) 		# Fine seller
+		seller.points = max(seller.points,MIN_POINTS)
+		seller.save()
+		buyer_user.points  += (2*chosen_parking.cost) 			# Compensate buyer
+		#TODO: notify buyer
+		buyer_user.save()
+
+	data = {'msg': "parking canceled"}
+	return JsonResponse(data)
+
 
 
 def generate_new_pin_code():
