@@ -29,7 +29,7 @@
 			<form name="form" method="post" action="{% url 'polls:login' %}" >
 			 	{% csrf_token %}
 
-				<input type="text" placeholder="username" name="user"><br>
+				<input type="text" placeholder="username" name="username"><br>
 				<input type="password" placeholder="password" name="password"><br>
 				<input type="submit" value="Login" />
 			</form>
@@ -44,10 +44,21 @@
 
 <script type = "text/javascript" >
 
-	var msg = '{{ request.session.msg }}';
-	if (msg != ""){
-		alert(msg);
-	}	
+    var msg = '{{ request.session.msg }}';
+    if (msg != ""){
+        alert(msg);
+        clearMsg();
+    }
+
+    function clearMsg() {
+
+        $.ajax({
+            type: "POST",
+            url:"/clear_msg/",
+            data: { 'csrfmiddlewaretoken': '{{csrf_token}}' }, 
+
+        } );
+    };
 
 </script>
 

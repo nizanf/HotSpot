@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+
+
+
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
         <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
       
   	<title>Offer Parking</title>
 	{% load static %}
-	<link rel="stylesheet" type="text/css" href="{% static "_css/HotSpot.css" %}">
-	<link rel="stylesheet" type="text/css" href="{% static "_css/find_parking.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
 </head>
 
 <body>
@@ -28,26 +32,77 @@
             
           <div id="form">
                 <table>
-                    <tr><td>Name:</td> <td><input type='text' id='name'/> </td> </tr>
-                    <tr><td>Address:</td> <td><input type='text' id='address'/> </td> </tr>
-                    <tr><td>Time:</td> <td> <input type="time"  id='Time'/> </td> </tr>
-                    <tr><td>Parking Size:</td> <td><select id='type'> +
+
+		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
+			{% csrf_token %}
+
+                    <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
+                    <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
+
+                    <tr><td>Address:</td> <td><input type='text' name ='address'  id='address'/> </td> </tr>
+                    <tr><td>Time:</td> <td><select id='time' name = 'time'> +
+                        <option value=5 SELECTED >5 min</option>
+                        <option value=10>10 min</option>
+                        <option value=15>15 min</option>
+                        <option value=20>20 min</option>
+                        <option value=25>25 min</option>
+                        <option value=30>30 min</option>
+
+                        </select> </td></tr>
+
+                    <tr><td>Parking Size:</td> <td><select id='type' name = 'size'> +
                         <option value='small'>small</option>
                         <option value='medium' SELECTED>medium</option>
                         <option value='Large'>Large</option>
                         </select> </td></tr>
-                        <tr><td></td><td><input type='button' value='Save' onclick='saveData()'/></td></tr>
+                        <tr><td></td><td><input type='submit' value='Submit'></td></tr>
                 </table>
             </div>
             <div id="message">Location saved</div>
             <script>
                 var map;
-                var marker;
+                var marker=null;
                 var infowindow;
                 var messagewindow;
+                var geocoder;
+
+                function codeLatLng(latlng, pointWindow, marker) {
+                  geocoder.geocode({
+                    'latLng': latlng
+                  }, function (results, status) {
+                       
+                      if (status == google.maps.GeocoderStatus.OK) {
+                        if (results[0]) {
+      
+                          var address_textbox = document.getElementById('address');
+                          address_textbox.value = results[0]['formatted_address'];
+
+                          var lat_address = document.getElementById('lat_address');
+                          var lng_address = document.getElementById('lng_address');
+
+                          var lat_value = results[0]["geometry"]["location"].lat();
+                          var lng_value = results[0]["geometry"]["location"].lng();
+
+                          lat_address.value = lat_value;
+                          lng_address.value = lng_value;
+
+                      } else {
+                        pointWindow.close();
+                        marker.setMap(null);
+                        alert('Address not found');
+                      }
+                    } else {
+                      pointWindow.close();
+                      marker.setMap(null);
+                      alert('Address not found');
+                    }
+                  });
+                }
+
 
 
             function initMap(){
+                geocoder = new google.maps.Geocoder();
                 //map options
                 var mapCanvas = document.getElementById("map");
                 var myCenter = new google.maps.LatLng(32.121678, 34.791143);
@@ -64,12 +119,30 @@
                 });
 
                 google.maps.event.addListener(map, 'click', function(event) {
+                    if (marker != null){
+                      var address_textbox = document.getElementById('address');
+                      
+                      if (address_textbox != null) {
+                        address_textbox.value = "";
+                      }
+                      marker.setMap(null); 
+                    }
                     marker = new google.maps.Marker({
                         position: event.latLng,
                         map: map
                     });
+                    //marker.setMap(map); 
+                    // TODO: Center the map to the marker
+
                     google.maps.event.addListener(marker, 'click', function() {
+                        
                         infowindow.open(map, marker);
+                        
+                        pos = marker.getPosition();
+                        result = codeLatLng(pos, infowindow, marker);
+                        var myJSON = JSON.stringify(result);
+
+
                     });
                 });
       }
