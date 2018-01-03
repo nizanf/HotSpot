@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- <meta charset="UTF-8"> -->
+	<title>Last Activity</title>
+	<meta charset="utf-8">
+	
+
+	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+  
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+	.checked {
+		color: orange;
+	}
+	</style>
+
+  <!-- <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script> -->
+  
+
+</head>
+
+<body>
+	<div class="all_site">
+	{% load static %}
+
+    
+     
+    <div class="body">
+        <header>
+            <div class="logo">
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+            </div>
+            <nav>
+                <ul>
+                    <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>  
+                    <!-- TODO GO BACK TO THE LAST PAGE   -->
+                </ul>
+            </nav>
+        </header>  	
+  <h2>History</h2>
+  <div class = "pull-right">
+	<span class="fa fa-star checked"></span>
+	<span class="fa fa-star checked"></span>
+	<span class="fa fa-star checked"></span>
+	<span class="fa fa-star"></span>
+	<span class="fa fa-star"></span>
+  </div>
+  <p></p>         
+  <table class="table table-dark">
+    <thead>
+      <tr>
+
+	<th>Buyer</th>
+	<th>Seller</th>
+	<th>Date&Time</th>
+	<th>Status</th>
+	<th>Address</th>
+	<th>Pincode</th>
+      </tr>
+    </thead>
+    <tbody>
+
+
+
+
+      		<tr>
+        		<td id="buyer">{{last_activity.0}}</td>
+        		<td id="seller">{{last_activity.1}}</td>
+        		<td id="date">{{last_activity.2}}</td>
+        		<td id="status">{{last_activity.3}}</td>
+        		<td id="address">{{last_activity.4}}</td>
+        		<td id="pincode">{{last_activity.5}}</td>
+      		</tr>      
+
+    </tbody>
+  </table>
+</div>
+
+
+	{% ifequal last_activity.5 "" %} <!-- check if pincode is empty. if so, it's the seller. --->
+		{% ifnotequal last_activity.6 "-1" %}
+			<button type="button" onclick = showButton() >Enter Pincode</button>
+			<input type="text" name ='pincode_text' id='pincode_text'/><input onclick = autPincode() type=button" name='aut_pincode' id='aut_pincode'>submit</input>
+		
+		{% endifnotequal %}		
+
+
+	{% endifequal %}
+
+
+<script>
+
+	window.onload = function() {
+
+		var purchase_id = '{{last_activity.6}}';
+		alert(purchase_id);
+
+		var pincode = document.getElementById('pincode_text');
+		pincode.style.visibility = "hidden";
+
+	};
+
+	function showButton(){
+
+		var pincode = document.getElementById('pincode_text');
+		pincode.style.visibility = "visible";
+	}
+
+	function autPincode(){
+
+
+		var pincode = document.getElementById('pincode_text').value;
+		var purchase_id = '{{last_activity.6}}';
+
+		$.ajax({
+			type: "POST",
+			url:"/aut_pincode/",
+
+
+
+			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'pincode':pincode, 'purchase_id':purchase_id}, 
+			dataType: 'json',
+			async: false,
+			success : function(data) {
+
+				if (data.msg == "Pincode correct!"){
+
+					alert("Pincode correct!");
+
+					document.getElementById('status').innerHTML = "done"; 
+
+				} else {
+					alert("Pincode incorrect!");
+				}
+
+			},
+			error : function(data) {
+				alert("fail");
+			}			
+
+	
+		} );
+
+
+
+	}
+	
+
+</script>
+
+
+</body>
+
+
+<footer>
+	<p>Find your spot</p>
+</footer>
+
+</html>
