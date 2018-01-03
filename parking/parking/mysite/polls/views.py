@@ -31,6 +31,7 @@ FREE_PARKING_RATING_REWARD = 1.1
 FREE_PARKING_POINTS_REWARD = 2
 MAX_POINTS = 1000000
 MAX_RATING = 5
+PINCODE_LEN = 6
 
 def call_login(request):
 	return render(request, 'polls/login.html')
@@ -49,6 +50,97 @@ def call_find(request):
 
 def call_heatmap(request):
 	return render(request, 'polls/heatmap.html')
+
+def call_last_activity(request):
+
+	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
+	max_pk = 0
+	last_activity = None
+	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
+
+	for purchase in sell_purchase:
+		if (purchase.pk > max_pk):
+			max_pk = purchase.pk
+			last_activity = purchase
+
+
+	for purchase in buy_purchase:
+		if (purchase.pk > max_pk):
+			max_pk = purchase.pk
+			last_activity = purchase
+
+
+	if (last_activity == None):
+		last_activity = ["", "", "", "", "", "", "-1"]
+
+		return render(request, 'polls/last_activity', {'last_activity':last_activity }) 
+
+
+	if (minutes_elapsed(last_activity.parking_time) > 0):
+		last_activity.status = "expired"
+		last_activity.save()
+
+	seller_username = (User.objects.get(pk = last_activity.seller_id)).username
+
+	if (last_activity.buyer_id == -1):
+		buyer_username = "--"
+	else:
+		buyer_username = (User.objects.get(pk = last_activity.buyer_id)).username
+
+	if (last_activity.seller_id == request.user.pk):
+		seller_username = "Me"
+		pincode = ""
+	else:
+		buyer_username = "Me"
+		pincode = last_activity.pincode
+
+	last_activity = [buyer_username, seller_username, last_activity.parking_time, last_activity.status, last_activity.parking_address, pincode, last_activity.pk]
+
+	return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
+	
+
+
+
+def aut_pincode(request):
+
+	pincode = request.POST.get("pincode")
+	purchase_id = int(request.POST.get("purchase_id"))
+	
+	purchase = Purchase.objects.get(pk = purchase_id)
+
+	print("our pincode = "+str(pincode)+" type = "+str(type(pincode)))
+
+	print("right pincode = "+str(purchase.pin_code)+" type = "+str(type(purchase.pin_code)))
+
+
+	if (str(pincode) == purchase.pin_code ):
+
+		purchase.status = "done"
+
+		seller_id = int(purchase.seller_id)
+		
+		seller = User.objects.get(pk = seller_id)
+		seller.profile.points += purchase.cost
+
+		seller.profile.rating = seller.profile.rating * 1.1
+
+		if (seller.profile.rating == 0):
+			seller.profile.rating = 0.1
+
+		seller.save()
+
+		data = {'msg': "Pincode correct!"}
+
+	else:
+	
+		
+		data = {'msg': "Pincode incorrect!"}
+	return JsonResponse(data)
+		
+
+
+	
+
 
 def call_history(request):
 
@@ -347,7 +439,14 @@ def offer_new_parking(request):
 
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 
-	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng)
+
+
+
+
+	pincode = ''.join(["%s" % randint(0, 9) for num in range(0, PINCODE_LEN)])
+
+
+	purchase 			= Purchase(seller_id = given_seller_id, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng, pin_code = pincode)
 
 	purchase.save()
 

@@ -59,7 +59,7 @@ class Purchase(models.Model):
 
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
-	pin_code		= models.IntegerField(default=-1)
+	pin_code		= models.CharField(max_length=2000, default="-1")
 	attempt_failure = 0
 
 

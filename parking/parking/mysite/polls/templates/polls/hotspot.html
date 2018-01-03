@@ -18,8 +18,9 @@
             </div>
             <nav>
                 <ul>
-                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
                     <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>
+                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
                 </ul>
             </nav>
             <div class="head_pic">
