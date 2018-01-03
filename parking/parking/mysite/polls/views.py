@@ -16,7 +16,8 @@ from random import randint
 import json
 from time import gmtime, strftime
 from django.contrib.auth import authenticate, login, logout
-
+from django.http import JsonResponse
+from math import radians, cos, sin, asin, sqrt
 
 
 TIMEOUT_RELOGIN = 10
@@ -24,7 +25,8 @@ TIMEOUT_LOCK = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
 THRESHOLD_RATING_TO_FREE_SPOT = 5
-FREE_PARKING_EXISTENCE_TIME = 30
+THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5
+FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
 FREE_PARKING_POINTS_REWARD = 2
 MAX_POINTS = 1000000
@@ -41,6 +43,9 @@ def call_register(request):
 
 def call_report(request):
 	return render(request, 'polls/report_parking.html')
+
+def call_find(request):
+	return render(request, 'polls/find_parking.html')
 
 def call_heatmap(request):
 	return render(request, 'polls/heatmap.html')
@@ -110,12 +115,10 @@ def login_user(request):
 	"""
 	if ('login_failures' in request.session and 
 		request.session['login_failures'] >= THRESHOLD_FAILURES and 
-		diff_minutes(request.session['last_failure']) < TIMEOUT_RELOGIN ):
+		minutes_elapsed(request.session['last_failure']) < TIMEOUT_RELOGIN ):
 
 			request.session['msg'] = str("The user is locked for {0} minutes".format(TIMEOUT_RELOGIN))
 
-			print("request.session['login_failures'] = "+str(request.session['login_failures']))			
-			print("diff_minutes(request.session['last_failure']) = "+str(diff_minutes(request.session['last_failure'])))
 			return render(request, 'polls/is_login.html', {"is_login":"false"})
 
 
@@ -150,15 +153,14 @@ def login_user(request):
 	  	return render(request, 'polls/is_login.html', {"is_login":"false"})
 
 
-def diff_minutes(last_failure_in_string):
+def minutes_elapsed(last_failure_in_string):
 	"""
 		Return True if user is still in timeout
 	"""
-	print("in diff_minutes")
-	last_failure_in_datetime = datetime.datetime.strptime(last_failure_in_string, "%Y-%m-%d %H:%M:%S")
 
+	last_failure_in_datetime = datetime.datetime.strptime(last_failure_in_string, "%Y-%m-%d %H:%M:%S")
 	diff = (datetime.datetime.now() - last_failure_in_datetime)
-	print("diff = "+str(diff.total_seconds() / 60))
+
 	return (diff.total_seconds() / 60)
 
 
@@ -245,7 +247,7 @@ def report_free_parking(request):
 
 		for parking in parking_in_street:
 			
-			diff_time = diff_minutes(parking.last_report_time)
+			diff_time = minutes_elapsed(parking.last_report_time)
 
 			# If the parking is still relvent
 			if diff_time < FREE_PARKING_EXISTENCE_TIME:
@@ -288,10 +290,11 @@ def report_free_parking(request):
 
 	# If we did not find the parking - add to the list
 	if not found_valid_parking:
-		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), last_report_time = given_parking_time, parking_address = given_parking_address, street_name = given_street_name, parking_rank = request.user.profile.rating)
+		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), last_report_time = given_parking_time, 						parking_address = given_parking_address, street_name = given_street_name, 							parking_address_lat = given_lat, parking_address_lng = given_lng, 
+						parking_rank = request.user.profile.rating)
 		free_parking.save()
 
-	# TODO: Add event log
+
 
 	return render(request, 'polls/hotspot.html')
 
@@ -309,8 +312,11 @@ def update_user_spots_status(given_seller_id):
 	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = "available")
 	for spot in sell_spot_list:
 		if (spot.status == "available" or spot.status == "in process"):
-			if (diff_minutes(spot.parking_time) < 0):
+			print("\n\n\n "+str(minutes_elapsed(spot.parking_time))+" \n\n\n")
+			if (minutes_elapsed(spot.parking_time) > 0):
+				
 				spot.status = "expired"
+				print("expired")
 				spot.save()
 
 
@@ -348,42 +354,80 @@ def offer_new_parking(request):
 	return render(request, 'polls/hotspot.html')
 
 
-def search_parking(request):
-	given_target_address 	= request.POST.get("target_location") 	# TODO: Verify nizan give us the location
-	radius 			= int(request.POST.get("radius")) 		
 
-	given_parking_time_in_minutes		= int(request.POST.get("parking_time"))
 
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    # Radius of earth in kilometers is 6371
+    m = 6371* c*1000
+    return m
+
+
+def update_spots_on_map(request):
+	print("here")
+
+
+	lat = float(request.POST.get('lat'))
+	if (not lat): 
+		lat = float(32.121678)
+
+	lng = float(request.POST.get('lng'))
+	if (not lng):
+		lat = float(34.791143)
+
+	radius = float(request.POST.get('radius'))
+	if (not radius): 
+		radius = 100
+	print ('1')
+	given_parking_time_in_minutes = int(request.POST.get('minutes'))
+	print ('2')
 	now = datetime.datetime.now()
 	time_delta = now + datetime.timedelta(minutes = given_parking_time_in_minutes)
-
+	print ('3')
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 
 
-
-	relevant_parkings 		= get_parkings_by_radius(given_target_address, radius, given_parking_time)
-	relevant_free_parkings 	= get_free_parkings_by_radius(given_target_address, radius, given_parking_time)
 	
-	return render(request, 'polls/show_available_parkings.html', { 'relevant_parkings' : relevant_parkings, 
-			'relevant_free_parkings' : relevant_free_parkings })
+	relevant_parkings 	= get_parkings_by_radius(lat, lng, radius, given_parking_time)
+	relevant_free_parkings 	= get_free_parkings_by_radius(lat, lng, radius, given_parking_time)
 
 
-def get_free_parkings_by_radius(target_address, radius, parking_time):
+
+	data = {'relevant_parkings': relevant_parkings, 'relevant_free_parkings': relevant_free_parkings}
+
+
+	return JsonResponse(data)
+
+
+
+
+def get_free_parkings_by_radius(lat1, lng1, radius, parking_time):
 	
-	# TODO: Not sure this is all the prakings, why Purchase?
 	all_parkings = FreeSpot.objects.all()
- 	relevat_parkings = []
+ 	relevant_parkings = []
 
  	# Iterate all over the free parking spots
   	for parking in all_parkings:
 
-		current_dist = calculate_distance(parking.parking_address,target_address)
+		if (is_free_parking_time_relevant(parking.last_report_time)):
+			lat2 = parking.parking_address_lat
+			lng2 = parking.parking_address_lng
+			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
 		
 		# If the parking time is relevant and the 
 		# pariking spot is available and near to dest
-		if (is_free_parking_time_relevant(parking.last_report_time) and \
-			current_dist <= radius):
-			relevat_parkings.append(parking)
+			if (current_dist <= radius):
+				relevat_parkings.append(parking)
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
 
@@ -391,32 +435,38 @@ def get_free_parkings_by_radius(target_address, radius, parking_time):
 
 
 def is_free_parking_time_relevant(parking_time): 
-	return (diff_minutes(parking_time) <= FREE_PARKING_EXISTENCE_TIME)
+	return (minutes_elapsed(parking_time) <= FREE_PARKING_EXISTENCE_TIME)
 
 
-def get_parkings_by_radius(target_address, radius, parking_time):
+def get_parkings_by_radius(lat1, lng2, radius, wanted_parking_time):
 	
 	all_parkings = Purchase.objects.all()
 
- 	relevat_parkings = []
+ 	relevant_parkings = []
 
  	# Iterate all over the offered parking spots
   	for parking in all_parkings:
+		parking_time = parking.parking_time
+		wanted_parking_time_in_datetime = datetime.datetime.strptime(wanted_parking_time, "%Y-%m-%d %H:%M:%S")
+		parking_time_in_datetime = datetime.datetime.strptime(parking_time, "%Y-%m-%d %H:%M:%S")
 
-		current_dist = calculate_distance(parking.parking_address,target_address)
+		diff_in_minutes = (wanted_parking_time_in_datetime - parking_time_in_datetime).total_seconds() / 60
+
+
+		if (abs(diff_in_minutes) <= THRESHOLD_RELEVANT_PARKING_TIME_DIFF):
+
+			lat2 = parking.parking_address_lat
+		 	lng2 = parking.parking_address_lng
+
+			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
 		
-		if (parking_time <= parking.parking_time and \
-			current_dist <= radius and
-			parking.status == "available"):
-			relevat_parkings.append(parking)
+			if (current_dist <= radius and
+				parking.status == "available"):
+				relevat_parkings.append(parking)
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
 	return serialize_relevant_parking
 
-
-def calculate_distance(address1, address2):
-	# TODO: Implement function
-	return 0
 
 																
 def update_db_free_parking():
@@ -427,7 +477,7 @@ def update_db_free_parking():
 		if (is_free_parking_time_relevant(FREE_PARKING_EXISTENCE_TIME)):
 			parking.delete()
 
-
+'''
 def refresh_map(request):
 
 	current_address 		= request.POST.get("current_address")
@@ -440,8 +490,9 @@ def refresh_map(request):
 	return render(request, 'polls/show_available_parkings.html', { 	'relevant_parkings' : relevant_parking,\
 																	'relevant_free_parkings' : relevant_free_parking })
 	
-
-def catch_parking(request):
+'''
+'''
+def find_new_parking(request):
 	
 	asked_target_address 	= request.POST.get("asked_target_address")
 	seller_user				= User.objects.get(pk=chosen_parking.seller_id)
@@ -459,8 +510,8 @@ def catch_parking(request):
 	if not chosen_parking.wait_lock(TIMEOUT_AVAILABLE_PARKING):
 		chosen_parking.lock.release()
 		# TOOD: render to unavailable parking dude or pop-up and render to parking list
-		return render(request, 'polls/show_available_parkings.html', \
-			{ 'relevant_parkings' : \
+		return render(request, 'polls/show_available_parkings.html', 
+			{ 'relevant_parkings' : 
 				get_parkings_by_radius(asked_target_address, radius, time.now()) })
 
 
@@ -495,6 +546,7 @@ def catch_parking(request):
 	
 	return render(request, 'polls/parking_purchased.html')
 
+'''
 
 def buyer_cancel_parking(request):
 	
@@ -561,7 +613,7 @@ def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
 	purchase.buyer_id			= buyer_id 	# user id
 	purchase.status 			= status
    	purchase.parking_rate 		= rate  
-	purchase.target_address 	= target_address*=
+	purchase.target_address 	= target_address
 	purchase.pin_code			= pincode
 	offered_parking.save()
 

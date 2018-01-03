@@ -15,11 +15,15 @@ urlpatterns = [
 
     url(r'^report_parking/$', views.call_report, name='call_report'),
     url(r'^offer_parking/$', views.call_offer, name='call_offer'),
+    url(r'^find_parking/$', views.call_find, name='call_find'),
     url(r'^heatmap/$', views.call_heatmap, name='call_heatmap'),
     url(r'^history/$', views.call_history, name='call_history'),
 
     url(r'^offer_new_parking/$', views.offer_new_parking, name='offer_new_parking'),
     url(r'^report_free_parking/$', views.report_free_parking, name='report_free_parking'),
+    #url(r'^find_new_parking/$', views.find_new_parking, name='find_new_parking'),
+  
+    url(r'^update_spots_on_map/$', views.update_spots_on_map, name='update_spots_on_map'),
 
     url(r'^clear_msg/$', views.clear_msg, name='clear_msg'),
 

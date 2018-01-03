@@ -83,8 +83,13 @@ class Purchase(models.Model):
 class FreeSpot(models.Model):
 	reporters_ids	= models.CharField(default="", max_length = 20000) 	# user id
 	last_report_time= models.CharField(max_length=200, default="") #  max 30 minutes from the offering time
+
 	parking_address = models.CharField(max_length=200) #coordinates of parking address. (x,y)
+
 	street_name		= models.CharField(max_length=200) # Parking street name
+	parking_address_lat = models.CharField(max_length=2000)
+	parking_address_lng = models.CharField(max_length=2000)
+
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	parking_rank	= models.IntegerField(default=0) # start with rating 0
