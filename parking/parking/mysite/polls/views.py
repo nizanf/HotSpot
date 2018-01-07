@@ -32,9 +32,15 @@ FREE_PARKING_POINTS_REWARD = 2
 MAX_POINTS = 1000000
 MAX_RATING = 5
 PINCODE_LEN = 6
-OLD_WEIGHT = 1/3
+OLD_RANK_WEIGHT = 1/3
 COLOR_THRESHOLD = 1/2
-NUMBER_OF_DAYS = 7
+NUMBER_OF_DAYS_FOR_STATISTICS = 7
+MINUTES_IN_HOUR = 60
+HOURS_IN_DAY = 24
+DAYS_IN_WEEK = 7
+HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
+
+
 
 def call_login(request):
 	return render(request, 'polls/login.html')
@@ -831,7 +837,7 @@ def provide_streets_to_query(request):
 #	TODO: init parking_actual_rank 
 def calculate_environment_average(spot):
 
-	neighbors = get_done_today_by_hour()
+	neighbors = filter_last_days_spots_by_status(HOURS_IN_DAY, 'done')
 	dist_list = []
 	total_distance_sum = 0
 	weighted_average = 0
@@ -843,18 +849,18 @@ def calculate_environment_average(spot):
 	for nb in neighbors:
 
 		sLat = spot.target_address_lat
-		sLng = pot.target_address_lng
+		sLng = spot.target_address_lng
 		nbLat = nb.target_address_lat
-		nbLng =  nb.target_address_lng
+		nbLng = nb.target_address_lng
 
 		nbDist = calculate_distance(sLat, sLng, nbLat, nbLng)
 
-		total_distance_sum += nbDist
+		total_distance_sum += nbDis
 		dist_list.append(nbDist)
 
-	#calcualte environment_average
-	for i in range (0,len(neighbors)):
-		nbw = dist_list[i]/total_distance_sum
+	# calcualte environment_average
+	for i in range (0, len(neighbors)):
+		nbw = float(dist_list[i]) / total_distance_sum
 		weighted_average += neighbors[i].parking_actual_rank * nbw
 
 	return weighted_average
@@ -868,7 +874,7 @@ def calculate_environment_average(spot):
 def calculate_actual_rating(old_spot):
 
 	old_rank = old_spot.parking_actual_rank
-	new_rank = (OLD_WEIGHT * old_rank) + ((1 - OLD_WEIGHT) * calculate_environment_average(old_spot))
+	new_rank = (OLD_RANK_WEIGHT * old_rank) + ((1 - OLD_RANK_WEIGHT) * calculate_environment_average(old_spot))
 	old_spot.parking_actual_rank = new_rank
 	old_spot.save()# ????????????????
 	return  new_rank
@@ -877,12 +883,9 @@ def calculate_actual_rating(old_spot):
 
 def get_all_old_purchases_color_classification():
 
-	#get all purchases that were changed to status "done" in the last NUMBER_OF_DAYS 
-	#TODO: check startdate, enddate are calculated correctly- exclude today!!!
-	startdate = datetime.today() - timedelta(days=NUMBER_OF_DAYS)
-	enddate = startdate 
+	#get all purchases that were changed to status "done" in the last NUMBER_OF_DAYS_FOR_STATISTICS 
 	
-	all_done_spots = Purchase.objects.filter(status = 'done',date__range=[startdate, enddate]) # TODO:??? parking_time the parking time is today|| the object was created today )
+	all_done_spots = filter_last_days_spots_by_status(NUMBER_OF_DAYS_FOR_STATISTICS, 'done')
 	spots_to_display = [] 
 
 	if all_done_spots:
@@ -915,20 +918,30 @@ def get_all_free_spots_color_classification():
 	return serializers.serialize("json", liveFreeSpots)
 
 
-def get_done_today_by_hour():
-	#get all purchases that were changed to status "done" today 
-	startdate = datetime.today()
-	enddate = startdate + timedelta(days=1)
-	#TODO: add lambda to the filter, to filter by hour of day 
-	neighbors = Purchase.objects.filter(status = 'done',date__range=[startdate, enddate]) # TODO:??? parking_time the parking time is today|| the object was created today )
-	return neighbors
+def filter_spots_of_last_hours(spots, num_of_hours):
 
+	filtered_spots = []
+	
+	for nb in spots:
+		if (minutes_elapsed(nb.parking_time) <= (MINUTES_IN_HOUR * num_of_hours)):
+			filtered_spots.append(nb)
+
+	return filtered_spots
+
+
+def filter_last_days_spots_by_status(num_of_hours, stat):
+	#get all purchases that were changed to status "done" today 
+	#TODO: add lambda to the filter, to filter by hour of day 
+	spots = Purchase.objects.filter(status = stat) # TODO:??? parking_time the parking time is today|| the object was created today )
+	return filter_spots_of_last_hours(spots, num_of_hours)
+
+	
 
 def get_current_spots_color_classification():
 
 	#classify done&& available
 
-	spots_done_last_hour = get_done_today_by_hour()
+	spots_done_last_hour = filter_last_days_spots_by_status(HOURS_IN_DAY, 'done')
 
 	spots_to_display = [] 
 
@@ -942,9 +955,7 @@ def get_current_spots_color_classification():
 			spots_to_display.append({parking_spot:spot, spot_rate: spot_color})
 
 	
-	startdate = datetime.today()
-	enddate = startdate + timedelta(days=1)
-	spots_available = Purchase.objects.filter(status = 'available',date__range=[startdate, enddate]) # TODO:??? parking_time the parking time is today|| the object was created today )
+	spots_available = filter_last_days_spots_by_status(HOURS_IN_DAY, 'available')
 
 	if spots_available:
 		for spot in spots_available:
