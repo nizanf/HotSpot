@@ -97,7 +97,7 @@ width: auto;
 height: auto;
 background-image:url("../_images/busy_street2.jpg");
 background-size: cover;
-z-index: 0;
+z-index: -1;
 }
 
 .grad{
@@ -139,4 +139,16 @@ color: rgba(255,255,255,0.6);
 
 ::-moz-input-placeholder{
 color: rgba(255,255,255,0.6);
+}
+
+
+
+.buttons {
+    z-index: 2;
+    position: absolute;
+    margin-top: 20%;
+    margin-left: 10%;
+    width: 18em;  height: 7em;
+
+
 }
