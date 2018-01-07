@@ -62,8 +62,8 @@
     <script>
 
 
-  var MIN_NO_ACC = 520;
-  var MAX_NO_ACC = 6119;
+  var MIN_NO_ACC = 0;
+  var MAX_NO_ACC = 1;
 function initialize() {
     geocoder = new google.maps.Geocoder();
   var mapProp = {
@@ -73,20 +73,25 @@ function initialize() {
   };
   var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
-  codeAddress("10001", 6119);
-  codeAddress("10002", 5180);
-  codeAddress("10003", 4110);
-  codeAddress("10004", 899);
-  codeAddress("10005", 520);
-  codeAddress("10006", 599);
+
+
+	var latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.855499)};
+	codeAddress(latlng, 0); // 1 - red. 0- green.
+
+	latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.858)};
+	codeAddress(latlng, 1);
+	//codeAddress("10003", 4110);
+	//codeAddress("1000432.109333, 34.855499.", 899);
+	//codeAddress("10005", 520);
+	//codeAddress("10006", 599);
 
 
 
 
-   function codeAddress(zip, noAccidents) {
-
+   function codeAddress(latlng, noAccidents) {
+	alert(latlng);
     //var address = document.getElementById("address").value;
-geocoder.geocode( { 'address': zip}, function(results, status) {
+geocoder.geocode( { 'location': latlng}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         map.setCenter(results[0].geometry.location);
 
@@ -105,11 +110,11 @@ geocoder.geocode( { 'address': zip}, function(results, status) {
 
         var heatmap = new google.maps.visualization.HeatmapLayer({
           data: heatMapZip,
-          radius: 50,
+          radius: 30,
           dissapating: false
         });
           
-        var rate = (noAccidents-MIN_NO_ACC)/(MAX_NO_ACC-MIN_NO_ACC+1);
+        var rate = noAccidents;
           console.log(rate);
         var gradient = [
             'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 0)',
