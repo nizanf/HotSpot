@@ -72,11 +72,8 @@
                         dataType: 'json',
                   async: false,
                         success : function(data) {
-
-                              rel_park = JSON.parse(data.relevant_parkings);
-                              alert("rel_park type = "+typeof(rel_park));
-                              free_rel_park = JSON.parse(data.relevant_free_parkings);
-                              console.log(data.relevant_parkings);
+                              rel_park = data.relevant_parkings
+                              free_rel_park = JSON.parse(data.relevant_free_parkings)
                               
                         },
                   error : function(data) {
@@ -147,8 +144,8 @@
             //add marker function
             function addParkingMarker(parking){
         
-                alert(parking.fields.parking_address_lat)
-                alert(parking.fields.parking_address_lng)
+                seller_user = parking.fields.user
+                alert(seller_user)
 
                 coords = { lat:parseFloat(parking.fields.parking_address_lat), lng:parseFloat(parking.fields.parking_address_lng)}
                 var new_marker = new google.maps.Marker({
@@ -158,14 +155,20 @@
                 //icon
                 });
 
-                
+                seller_id = parking.fields.seller_id;
+                seller_name = parking.fields.seller_name;
+                seller_rating = parking.fields.seller_rating;
+
                 //TODO Add the seller's name and rating
-                var new_infoWindow = new google.maps.InfoWindow({
-                    content:  'messi'
-                });
+                var new_infoWindow = new google.maps.InfoWindow({ });
+                //set content of infoWindow
+
+                new_infoWindow.setContent("<p><b>" + seller_name + "<b/><br/>" + 
+                  "Raiting: " + seller_rating + "<br/></p>");
 
                 new_marker.addListener('click', function() {
                     new_infoWindow.open(map, new_marker);
+                    setTimeout(function () { new_infoWindow.close(); }, 5000);
                 }); 
                 
             } // End addParkingMarker
@@ -187,15 +190,11 @@
                                       update_spots_on_map(lat, lng, radius, minutes);
 
                                       console.log("3");
-                                      alert("Salam");
-                                      alert(rel_park.length);
                                       //loop to add -markers
                                       for(var i = 0;i < rel_park.length;i++){
-                                        alert("messsii");
-                                          alert(rel_park[i]);
-                                          alert("messsii");
                                           
                                           addParkingMarker(rel_park[i]);
+                                          console.log(rel_park[i]);
                                       }
                                       console.log("4");
                                       //loop to add -markers
@@ -203,8 +202,7 @@
                                           addParkingMarker(free_rel_park[i]);
                                       }
                                       console.log("5");
-                                      alert("akaka");
-
+                                      
 
                                             // var marker = new google.maps.Marker({
                                             // map: resultsMap,
