@@ -25,7 +25,7 @@ TIMEOUT_LOCK = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
 THRESHOLD_RATING_TO_FREE_SPOT = 5
-THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5
+THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000
 FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
 FREE_PARKING_POINTS_REWARD = 2
@@ -498,10 +498,25 @@ def update_spots_on_map(request):
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 	
 	relevant_parkings 	= get_parkings_by_radius(lat, lng, radius, given_parking_time)
+	
+	relv_park = json.loads(relevant_parkings)
+	for p in relv_park:
+		seller_id = p['fields']['seller_id']
+		seller_user = Profile.objects.get(pk=seller_id)
+		p['fields']['seller_name'] = seller_user.user.username
+		p['fields']['seller_rating'] = seller_user.rating
+		print "====================="
+		print p
+		print "====================="
+		print relv_park
+		print "====================="
+	
 	relevant_free_parkings 	= get_free_parkings_by_radius(lat, lng, radius, given_parking_time)
 
-	data = {'relevant_parkings': relevant_parkings, 'relevant_free_parkings': relevant_free_parkings}
-
+	data = {'relevant_parkings': relv_park, 'relevant_free_parkings': relevant_free_parkings}
+	print "\n\n\n\n\n"
+	print data
+	print "\n\n"
 
 	return JsonResponse(data)
 
