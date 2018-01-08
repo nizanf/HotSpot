@@ -62,6 +62,10 @@ class Purchase(models.Model):
 	pin_code		= models.CharField(max_length=2000, default="-1")
 	attempt_failure = 0
 
+	parking_actual_rank = models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
+
+
+
 
 	def class_name(self):
     		return Purchase.__name__
@@ -76,6 +80,7 @@ class Purchase(models.Model):
 					self.cond.wait(timeout - current_time + start_time)
 					current_time = time.time()
 		return False
+
 
 
 
