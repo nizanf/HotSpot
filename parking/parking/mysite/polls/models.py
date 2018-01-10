@@ -117,8 +117,8 @@ class FreeSpot(models.Model):
 
 class Statistics(models.Model):
 	
-	parking_address_lat = models.CharField(max_length=2000)
-	parking_address_lng = models.CharField(max_length=2000)
+	lat = models.CharField(max_length=2000)
+	lng = models.CharField(max_length=2000)
 
 	hour 				= models.IntegerField(default=0)
-	rating				= models.IntegerField(default=0)
+	rating				= models.DecimalField(max_digits=8,decimal_places=7,default=Decimal('0.0000'))

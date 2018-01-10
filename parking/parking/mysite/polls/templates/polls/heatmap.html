@@ -73,13 +73,18 @@ function initialize() {
   };
   var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
+  var points = JSON.parse('{{points|safe}}');
+  for(var i = 0;i < points.length;i++){
+        point = points[i];
+        alert("ORrrrr                       " + point)
+        var latlng = {lat: parseFloat(point.lat), lng: parseFloat(point.lng)};
+        codeAddress(latlng, parseInt(point.color)); // 1 - red. 0- green.
+  }
 
+ //  for i in range(0,len(points))
+	// var latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.855499)};
+	// codeAddress(latlng, 0); // 1 - red. 0- green.
 
-	var latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.855499)};
-	codeAddress(latlng, 0); // 1 - red. 0- green.
-
-	latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.858)};
-	codeAddress(latlng, 1);
 	//codeAddress("10003", 4110);
 	//codeAddress("1000432.109333, 34.855499.", 899);
 	//codeAddress("10005", 520);

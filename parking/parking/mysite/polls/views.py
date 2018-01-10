@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.models import User
-from .models import Profile, Purchase, FreeSpot
+from .models import Profile, Purchase, FreeSpot, Statistics
 from django.core import serializers
 from random import randint
 import json
@@ -18,6 +18,7 @@ from time import gmtime, strftime
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from math import radians, cos, sin, asin, sqrt
+from decimal import *
 
 DEFAULT_PARKING_RATE = 2
 MIN_POINTS = 0 
@@ -25,7 +26,7 @@ TIMEOUT_RELOGIN = 10
 TIMEOUT_LOCK = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
-THRESHOLD_RATING_TO_FREE_SPOT = 5
+THRESHOLD_RATING_TO_FREE_SPOT = 1
 THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000
 FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
@@ -33,7 +34,7 @@ FREE_PARKING_POINTS_REWARD = 2
 MAX_POINTS = 1000000
 MAX_RATING = 5
 PINCODE_LEN = 6
-OLD_RANK_WEIGHT = 1/3
+OLD_RANK_WEIGHT = 0.25
 COLOR_THRESHOLD = 1/2
 NUMBER_OF_DAYS_FOR_STATISTICS = 7
 MINUTES_IN_HOUR = 60
@@ -71,7 +72,9 @@ def call_find(request):
 	return render(request, 'polls/find_parking.html')
 
 def call_heatmap(request):
-	return render(request, 'polls/heatmap.html')
+	points = get_statistics_color_classification()
+	print ("\n\n\npoints = "+str(points)+"\n\n\n")
+	return render(request, 'polls/heatmap.html', {'points':points})
 
 def call_last_activity(request):
 
@@ -340,9 +343,9 @@ def extract_street_name(parking_address):
 
 def report_free_parking(request):
 
-
-	given_lat = request.POST.get("lat_address")
-	given_lng = request.POST.get("lng_address")
+	print("here1")
+	given_lat = float(request.POST.get("lat_address"))
+	given_lng = float(request.POST.get("lng_address"))
 	
 	request.session["msg"] = ""
 
@@ -361,6 +364,7 @@ def report_free_parking(request):
 	found_valid_parking = False
 
 	if parking_in_street:
+		print("here1")
 
 		for parking in parking_in_street:
 			
@@ -384,6 +388,7 @@ def report_free_parking(request):
 
 				# If there is enough rating of reporters to verify
 				# the parking
+				print ("parking.is_verified = "+str(parking.is_verified))
 				if parking.is_verified:
 					# Update rank/points to given_reporter_id user
 					reporter_user = User.objects.get(pk=given_reporter_id)
@@ -393,9 +398,16 @@ def report_free_parking(request):
 				# If the parking rank is over the threshold - add points to 
 				# the reporters and show it in the map
 				else: 
+					print("parking.parking_rank = "+str(parking.parking_rank))
+					print("THRESHOLD_RATING_TO_FREE_SPOT = "+str(THRESHOLD_RATING_TO_FREE_SPOT))
 					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
+						now = datetime.datetime.now()
 						parking.is_verified = 1
-						for usr_id in free_parking:
+						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =1)
+						print("statistics created")
+						calculate_actual_rating(stat)
+
+						for user_id in reporters_ids_list:
 							# Update rank/points to given_reporter_id user
 							reporter_user = User.objects.get(pk=user_id)
 							update_rating_for_user(reporter_user,'report')
@@ -407,9 +419,36 @@ def report_free_parking(request):
 
 	# If we did not find the parking - add to the list
 	if not found_valid_parking:
-		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), last_report_time = given_parking_time, 						parking_address = given_parking_address, street_name = given_street_name, 							parking_address_lat = given_lat, parking_address_lng = given_lng, 
-						parking_rank = request.user.profile.rating)
+		free_parking = FreeSpot(reporters_ids = json.dumps([given_reporter_id]), last_report_time = given_parking_time,
+		 						parking_address = given_parking_address, street_name = given_street_name, 	
+		 						parking_address_lat = given_lat, parking_address_lng = given_lng, 
+								parking_rank = request.user.profile.rating)
+
+		reporters_ids_json = free_parking.reporters_ids
+		reporters_ids_list = json.loads(reporters_ids_json)
+
+		reporters_ids_list.append(given_reporter_id)
+		reporters_ids_json = json.dumps(reporters_ids_list)
+		free_parking.reporters_ids = reporters_ids_json
+		free_parking.parking_rank += request.user.profile.rating
+
+
+		if (free_parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
+			now = datetime.datetime.now()
+			free_parking.is_verified = 1
+			stat = Statistics( lat = given_lat ,lng= given_lng, hour =  int(now.hour),rating =1)
+			print("statistics created")
+			calculate_actual_rating(stat)
+
+
+
+			for user_id in reporters_ids_list:
+				# Update rank/points to given_reporter_id user
+				reporter_user = User.objects.get(pk=user_id)
+				update_rating_for_user(reporter_user,'report')
+
 		free_parking.save()
+
 
 
 
@@ -426,7 +465,7 @@ def clear_msg(request):
 
 
 def update_user_spots_status(given_seller_id):
-	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE)
+	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id)
 	for spot in sell_spot_list:
 		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PROCESS):
 			
@@ -519,7 +558,6 @@ def update_spots_on_map(request):
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 	
 	relevant_parkings 	= get_parkings_by_radius(lat, lng, radius, given_parking_time)
-	print relevant_parkings
 	
 	relv_park = json.loads(relevant_parkings)
 	for p in relv_park:
@@ -545,7 +583,7 @@ def update_spots_on_map(request):
 
 def get_free_parkings_by_radius(lat1, lng1, radius, parking_time):
 	
-	all_parkings = FreeSpot.objects.all()
+	all_parkings = FreeSpot.objects.filter(is_verified=1)
  	relevant_parkings = []
 
  	# Iterate all over the free parking spots
@@ -762,7 +800,7 @@ def buyer_cancel_parking(request):
 	data = {'msg': "parking canceled"}
 	return JsonResponse(data)
 
-'''
+
 # when seller insert the pincode 
 def make_exchange(request):
 	parking_id 			= request.POST.get("parking_id")
@@ -796,7 +834,7 @@ def make_exchange(request):
 			return render(request, 'polls/deal_cancelled.html')
 			
 
-'''
+
 #TODO make sure when locking the parking dont need to save the acquiere to the database
 #when to save? is the acquiere recursive?
 def seller_cancel_parking(request):
@@ -840,16 +878,15 @@ def seller_cancel_parking(request):
 
 
 
-'''	
+
 def authenticate_pincode(provided_pincode, actual_pincode):
 	return provided_pincode == actual_pincode
-'''
 
 def update_rating_for_user(user, status): #TODO: fix rating for user!!!!!!!!!!!!!!!!!1
 
 	if (status == 'report'):
-		user.rank *= FREE_PARKING_RATING_REWARD # Gal
-		user.points += FREE_PARKING_POINTS_REWARD
+		user.profile.rating *= FREE_PARKING_RATING_REWARD # Gal
+		user.profile.points += FREE_PARKING_POINTS_REWARD
 
 	# Stage 2
 
@@ -864,8 +901,8 @@ def update_rating_for_user(user, status): #TODO: fix rating for user!!!!!!!!!!!!
 	# user.save()
 	pass
 	
-	user.rank = min(user.rank, MAX_RATING)
-	user.points = min(user.points, MAX_POINTS)
+	user.profile.rating = min(user.profile.rating, MAX_RATING)
+	user.profile.points = min(user.profile.points, MAX_POINTS)
 	user.save()
 
 
@@ -882,19 +919,20 @@ def provide_streets_to_query(request):
 	for street_name, grade in data.iteritems():
 		if (grade > 3):
 
+'''
 
 ############################################################################################HeatMap
-
- given a spot - calculate it's current avreage rate
- for each Purchase that was completed('done') today (:= neighbor)- assign with influence weight (:=nw) on the current spot
+'''
+ given a stat_spot - calculate it's relative distance
+ for each element in Statstics 
  spot_average = nw1*neighbor_rate_1 + *** +  nwk*neighbor_rate_k
- assume parking_actual_rank was initialized when the spot status was modified to done
-'''
+ assume stat_rating was initialized'''
+ 
 #	TODO: init parking_actual_rank 
-'''
-def calculate_environment_average(spot):
+def calculate_environment_average(spot_stat):
+	now = datetime.datetime.now()
 
-	neighbors = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.DONE)
+	neighbors = Statistics.objects.filter(hour =  int(now.hour))
 	dist_list = []
 	total_distance_sum = 0
 	weighted_average = 0
@@ -905,154 +943,74 @@ def calculate_environment_average(spot):
 	# calculate total total_distance_sum and calculate the weight of each neighbor
 	for nb in neighbors:
 
-		sLat = spot.target_address_lat
-		sLng = spot.target_address_lng
-		nbLat = nb.target_address_lat
-		nbLng = nb.target_address_lng
+		sLat = float(spot_stat.lat)
+		sLng = float(spot_stat.lng)
+		nbLat = float(nb.lat)
+		nbLng = float(nb.lng)
 
 		nbDist = calculate_distance(sLat, sLng, nbLat, nbLng)
 
-		total_distance_sum += nbDis
+		total_distance_sum += nbDist
 		dist_list.append(nbDist)
 
 	# calcualte environment_average
 	for i in range (0, len(neighbors)):
 		nbw = float(dist_list[i]) / total_distance_sum
-		weighted_average += neighbors[i].parking_actual_rank * nbw
+		weighted_average += float(neighbors[i].rating) * nbw
 
 	return weighted_average
 
 
-each old purchase has actual_rating derived from: 0.33*(old_rating) + 0.66*(live_environment_average )
-
-# TODO: issue here because we update the field actual_rank for
-# each done spot with differnt rage because i depends on which coor we calc now
-# the statistics arnt reuseable!!!!!!!!!!!!!
-def calculate_actual_rating(old_spot):
-
-	old_rank = old_spot.parking_actual_rank
-	new_rank = (OLD_RANK_WEIGHT * old_rank) + ((1 - OLD_RANK_WEIGHT) * calculate_environment_average(old_spot))
-	old_spot.parking_actual_rank = new_rank
-	old_spot.save()# ????????????????
-	return  new_rank
-
-
-
-def get_all_old_purchases_color_classification():
-
-	#get all purchases that were changed to status "done" in the last NUMBER_OF_DAYS_FOR_STATISTICS 
-	
-	all_done_spots = filter_last_days_spots_by_status(NUMBER_OF_DAYS_FOR_STATISTICS, ParkingStatus.DONE)
-	spots_to_display = [] 
-
-	if all_done_spots:
-		for spot in all_done_spots:
-			cur_rate = calculate_actual_rating(spot) 
-			spot_color = 1
-			if cur_rate > COLOR_THRESHOLD: # high rating- color in green
-				spot_color = 0
-
-			spots_to_display.append({parking_spot:spot, spot_rate: spot_color})
-
-
-	return serializers.serialize("json", spots_to_display)	# return JsonResponse(spots_to_display)
-
-
-#create json with live updates on freeSpots - should be marked green on the map
-def get_all_free_spots_color_classification():
-	
-	allFreeSpots = FreeSpot.objects.all() # get all reported parking spots
- 	liveFreeSpots = []
-
-	if allFreeSpots:
-		for spot in allFreeSpots:
-			# if last report time was less then  FREE_PARKING_EXISTENCE_TIME show in heatmap
-			if (is_free_parking_time_relevant(spot.last_report_time)):
-				#liveFreeSpots.append(spot)
-				spot_color = 0 
-				liveFreeSpots.append({parking_spot:spot, spot_rate: spot_color})
-
-	return serializers.serialize("json", liveFreeSpots)
-
-
-def filter_spots_of_last_hours(spots, num_of_hours):
-
-	filtered_spots = []
-	
-	for nb in spots:
-		if (minutes_elapsed(nb.parking_time) <= (MINUTES_IN_HOUR * num_of_hours)):
-			filtered_spots.append(nb)
-
-	return filtered_spots
-
-
-def filter_last_days_spots_by_status(num_of_hours, stat):
-	#get all purchases that were changed to status "done" today 
-	#TODO: add lambda to the filter, to filter by hour of day 
-	spots = Purchase.objects.filter(status = stat) # TODO:??? parking_time the parking time is today|| the object was created today )
-	return filter_spots_of_last_hours(spots, num_of_hours)
-
-	
-
-def get_current_spots_color_classification():
-
-	#classify done&& available
-
-	spots_done_last_hour = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.DONE)
-
-	spots_to_display = [] 
-
-	if spots_done_last_hour:
-		for spot in spots_done_last_hour:
-			cur_rate = spot.parking_rate 
-			spot_color = 1
-			if cur_rate > COLOR_THRESHOLD: # high rating- color in green
-				spot_color = 0
-
-			spots_to_display.append({parking_spot:spot, spot_rate: spot_color})
-
-	
-	spots_available = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.AVAILABLE)
-
-	if spots_available:
-		for spot in spots_available:
-			spot_color = 1 # occupied - color red
-			spots_to_display.append({parking_spot:spot, spot_rate: spot_color})
-
-	return serializers.serialize("json", spots_to_display)	# return JsonResponse(spots_to_display)
-
-
-
-def get_spots_with_colors():
-	
-	statistics_spots = get_all_old_purchases_color_classification()
-	#current data
-	free_spots = get_all_free_spots_color_classification()
-
-	done_available_spots = get_current_spots_color_classification()
-
-	data = {'done_spots': done_spots, 'free_spots': free_spots, 'done_available_spots':done_available_spots }
-
-	return JsonResponse(data)
-
-
-#TODO: add data about available spots
-#TODO: add data about occupied spots extracted from users 
-
-#create data for statistics in all Purchases- irrelevent.. cant reuse data - very bad!!! 
-#heatmap by radius?? maybe narrow to certain area?? country??  
-#flag if actual_rate was already updated today 
-
-# data from now  
-# freeSpots- get all free parking spots that are in the treshold                                  greeen
-# Purcheses -
-## available(there is someone) - 																	red 
-## done based on the rating, if  the rating is low- the target address is red else green 
- 
-#data from statistics only for purchase-  
-# for each point in the data base calculate wighet of each otherpoint that is 'done' today  - calc status for today
-#+ status from yestrday in a new field actualRate 
-
-# green points 
-
 '''
+update rank for new statistics object: spot
+'''
+def calculate_actual_rating(spot_stat):
+
+	spot_rating = spot_stat.rating
+	stat_rating = (OLD_RANK_WEIGHT * spot_rating) + ((1 - OLD_RANK_WEIGHT) * calculate_environment_average(spot_stat))
+	spot_stat.rating = stat_rating
+	spot_stat.save()
+
+
+
+def get_statistics_color_classification():
+	#get all statistics from the same hour as now  
+	now = datetime.datetime.now()	
+	# get all statistics for the current hour from data base
+	all_statistics = Statistics.objects.filter(hour =  int(now.hour) )
+	stats_to_display = [] 
+	
+	for stat in all_statistics:
+		curr_rate = stat.rating
+		stat_color = 1 if curr_rate > COLOR_THRESHOLD else 0 # high rating- color in green
+
+		stats_to_display.append({'lat':stat.lat, 'lng':stat.lng, 'color': stat_color})
+
+	return json.dumps(stats_to_display)	# return JsonResponse(spots_to_display)
+
+
+# def get_stats_with_colors():
+	
+# 	statistics_spots = get_statistics_color_classification()
+# 	data = {'done_spots': statistics_spots}
+
+# 	return JsonResponse(data)
+
+
+
+# def filter_spots_of_last_hours(spots, num_of_hours):
+
+# 	filtered_spots = []
+	
+# 	for nb in spots:
+# 		if (minutes_elapsed(nb.parking_time) <= (MINUTES_IN_HOUR * num_of_hours)):
+# 			filtered_spots.append(nb)
+# 	return filtered_spots
+
+# def filter_last_days_spots_by_status(num_of_hours, stat):
+# 	#get all purchases that were changed to status "done" today 
+# 	#TODO: add lambda to the filter, to filter by hour of day 
+# 	spots = Purchase.objects.filter(status = stat) # TODO:??? parking_time the parking time is today|| the object was created today )
+# 	return filter_spots_of_last_hours(spots, num_of_hours)
+
+	
