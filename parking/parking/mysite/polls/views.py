@@ -95,9 +95,8 @@ def call_last_activity(request):
 	if (last_activity == None):
 		last_activity = ["", "", "", "", "", "", "", "-1"]
 
-		return render(request, 'polls/last_activity', {'last_activity':last_activity }) 
-
-
+		return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
+		
 	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status != ParkingStatus.DONE and last_activity.status != ParkingStatus.CANCELED):
 		last_activity.status = ParkingStatus.EXPIRED
 		last_activity.save()
@@ -109,7 +108,7 @@ def call_last_activity(request):
 		contact = "--"
 	else:
 		buyer_username = (User.objects.get(pk = last_activity.buyer_id)).username
-		contact = (User.objects.get(pk = last_activity.buyer_id)).phone_number
+		contact = (User.objects.get(pk = last_activity.buyer_id)).profile.phone_number
 
 	if (last_activity.seller_id == request.user.pk):
 		seller_username = "Me"
@@ -117,7 +116,7 @@ def call_last_activity(request):
 	else:
 		buyer_username = "Me"
 		contact = (User.objects.get(pk = last_activity.seller_id)).profile.phone_number
-		pincode = last_activity.pincode
+		pincode = last_activity.pin_code
 
 	last_activity = [buyer_username, seller_username, last_activity.parking_time, last_activity.status, last_activity.parking_address, contact, pincode, last_activity.pk]
 
@@ -429,7 +428,7 @@ def clear_msg(request):
 def update_user_spots_status(given_seller_id):
 	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE)
 	for spot in sell_spot_list:
-		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PORCESS):
+		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PROCESS):
 			
 			if (minutes_elapsed(spot.parking_time) > 0):
 				
@@ -451,7 +450,7 @@ def offer_new_parking(request):
 
 	update_user_spots_status(given_seller_id)
 
-	if (Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE) or Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.IN_PORCESS)):
+	if (Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE) or Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.IN_PROCESS)):
 		request.session["msg"] = "You already submitted a parking!!!"
 		return render(request, 'polls/hotspot.html')
 
@@ -648,6 +647,10 @@ def find_new_parking(request):
 	# Buyer
 	buyer_user_id 		= int(request.user.pk)
 	buyer_user 			= User.objects.get(pk=buyer_user_id)
+
+	if (buyer_user_id == seller_id):
+		request.session["msg"] = "Cannot buy your own parking !!!"
+		return render(request, 'polls/hotspot.html')
 
 	# The radius according to the zoom of the user's map
 	radius 				= request.POST.get("radius")
