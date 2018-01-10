@@ -73,68 +73,90 @@ function initialize() {
   };
   var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
-  var points = JSON.parse('{{points|safe}}');
+  var points = JSON.parse('{{points|safe}}');// 1 - red. 0- green.
+  //var gradient = [];
+  var point;
+  alert(points.length);
+  var heatMapData = [];
   for(var i = 0;i < points.length;i++){
-        point = points[i];
-        alert("ORrrrr                       " + point)
-        var latlng = {lat: parseFloat(point.lat), lng: parseFloat(point.lng)};
-        codeAddress(latlng, parseInt(point.color)); // 1 - red. 0- green.
+      if (parseInt(points[i].color) == 0) {  // Red
+          point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+          heatMapData.push(point);
+        //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
+      }
   }
+  codeAddress(heatMapData, map, 0);
 
- //  for i in range(0,len(points))
-	// var latlng = {lat: parseFloat(32.109333), lng: parseFloat(34.855499)};
-	// codeAddress(latlng, 0); // 1 - red. 0- green.
+  var heatMapData = [];
+  for(var i = 0;i < points.length;i++){
+    if (parseInt(points[i].color) == 1) {  // Green
+        point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+        heatMapData.push(point);
+        //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
+    }
+  }
+  codeAddress(heatMapData, map, 1);
 
-	//codeAddress("10003", 4110);
-	//codeAddress("1000432.109333, 34.855499.", 899);
-	//codeAddress("10005", 520);
-	//codeAddress("10006", 599);
 
 
 
 
-   function codeAddress(latlng, noAccidents) {
-	//alert(latlng);
-    //var address = document.getElementById("address").value;
-geocoder.geocode( { 'location': latlng}, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-        map.setCenter(results[0].geometry.location);
 
-        var hotSpot = results[0].geometry.location;
-        console.log(hotSpot + " " + noAccidents);
 
-        var heatMapZip = [
-        {location: hotSpot, weight: noAccidents}
+//    function codeAddress(latlng, noAccidents) {
+//     //var address = document.getElementById("address").value;
+// geocoder.geocode( { 'location': latlng}, function(results, status) {
+//       if (status == google.maps.GeocoderStatus.OK) {
+//         map.setCenter(results[0].geometry.location);
 
-        ];
+//         var hotSpot = results[0].geometry.location;
+//         console.log(hotSpot + " " + noAccidents);
 
-       var color =[
-            "#ff0000",
-            "#00ff00"
-        ];
+
+
+function codeAddress(heatMapData, map, rate) {
+
+
+       // var color =[
+       //      "#ff0000",
+       //      "#00ff00"
+       //  ];
 
         var heatmap = new google.maps.visualization.HeatmapLayer({
-          data: heatMapZip,
+          data: heatMapData,
           radius: 30,
           dissapating: false
         });
           
-        var rate = noAccidents;
-          console.log(rate);
+        // var rate = color;
+        // console.log("rate = "+rate);
+        // var gradient = [
+        //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 0)',
+        //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 1)'];
+
+
+        //var gradient = ['rgba(0,255,255,0)']
+
+
+
+        //heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
+
+        //heatmap.set('gradient', gradient);
+
+         //var rate = 0;
+        console.log(rate);
         var gradient = [
-            'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 0)',
-            'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 1)'];
+            'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 0)',
+            'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 1)'];
         heatmap.set('gradient', gradient);
         heatmap.setMap(map);
 
-      } else {
-        alert("Geocode was not successful for the following reason: " + status);
-      }
-    });
+      } 
+  
   }
 
 
-}
+
 
 google.maps.event.addDomListener(window, 'load', initialize);
       </script>

@@ -35,12 +35,17 @@ MAX_POINTS = 1000000
 MAX_RATING = 5
 PINCODE_LEN = 6
 OLD_RANK_WEIGHT = 0.25
-COLOR_THRESHOLD = 1/2
+COLOR_THRESHOLD = 0.5
 NUMBER_OF_DAYS_FOR_STATISTICS = 7
 MINUTES_IN_HOUR = 60
 HOURS_IN_DAY = 24
 DAYS_IN_WEEK = 7
 HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
+
+RED = 0		# Busy spot
+GREEN = 1 	# Available spot
+
+
 
 DIST_HIGH_BOUND_RATE_2 = 1000
 DIST_HIGH_BOUND_RATE_3 = 500
@@ -403,7 +408,7 @@ def report_free_parking(request):
 					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 						now = datetime.datetime.now()
 						parking.is_verified = 1
-						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =1)
+						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =GREEN)
 						print("statistics created")
 						calculate_actual_rating(stat)
 
@@ -436,7 +441,7 @@ def report_free_parking(request):
 		if (free_parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 			now = datetime.datetime.now()
 			free_parking.is_verified = 1
-			stat = Statistics( lat = given_lat ,lng= given_lng, hour =  int(now.hour),rating =1)
+			stat = Statistics( lat = given_lat ,lng= given_lng, hour =  int(now.hour),rating =GREEN)
 			print("statistics created")
 			calculate_actual_rating(stat)
 
@@ -938,7 +943,7 @@ def calculate_environment_average(spot_stat):
 	weighted_average = 0
 
 	if not neighbors:
-		return weighted_average
+		return spot_stat.rating
 
 	# calculate total total_distance_sum and calculate the weight of each neighbor
 	for nb in neighbors:
@@ -982,7 +987,7 @@ def get_statistics_color_classification():
 	
 	for stat in all_statistics:
 		curr_rate = stat.rating
-		stat_color = 1 if curr_rate > COLOR_THRESHOLD else 0 # high rating- color in green
+		stat_color = GREEN if curr_rate > COLOR_THRESHOLD else RED # high rating- color in green
 
 		stats_to_display.append({'lat':stat.lat, 'lng':stat.lng, 'color': stat_color})
 
