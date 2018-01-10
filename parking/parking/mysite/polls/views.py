@@ -41,6 +41,13 @@ DAYS_IN_WEEK = 7
 HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
 
 
+class ParkingStatus:
+	DONE = 'done'
+	EXPIRED = 'expired'
+	CANCELED = 'canceled'
+	IN_PORCESS = 'in process'
+	AVAILABLE = 'available'
+
 
 def call_login(request):
 	return render(request, 'polls/login.html')
@@ -85,8 +92,8 @@ def call_last_activity(request):
 		return render(request, 'polls/last_activity', {'last_activity':last_activity }) 
 
 
-	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status != "done" and last_activity.status != "canceled"):
-		last_activity.status = "expired"
+	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status != ParkingStatus.DONE and last_activity.status != ParkingStatus.CANCELED):
+		last_activity.status = ParkingStatus.EXPIRED
 		last_activity.save()
 
 	seller_username = (User.objects.get(pk = last_activity.seller_id)).username
@@ -127,7 +134,7 @@ def aut_pincode(request):
 
 	if (str(pincode) == purchase.pin_code ):
 
-		purchase.status = "done"
+		purchase.status = ParkingStatus.DONE
 		purchase.save()
 
 		seller_id = int(purchase.seller_id)
@@ -414,14 +421,14 @@ def clear_msg(request):
 
 
 def update_user_spots_status(given_seller_id):
-	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = "available")
+	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE)
 	for spot in sell_spot_list:
-		if (spot.status == "available" or spot.status == "in process"):
-			print("\n\n\n "+str(minutes_elapsed(spot.parking_time))+" \n\n\n")
+		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PORCESS):
+			
 			if (minutes_elapsed(spot.parking_time) > 0):
 				
-				spot.status = "expired"
-				print("expired")
+				spot.status = ParkingStatus.EXPIRED
+				print(ParkingStatus.EXPIRED)
 				spot.save()
 
 
@@ -438,7 +445,7 @@ def offer_new_parking(request):
 
 	update_user_spots_status(given_seller_id)
 
-	if (Purchase.objects.filter(seller_id = given_seller_id, status = "available") or Purchase.objects.filter(seller_id = given_seller_id, status = "in process")):
+	if (Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE) or Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.IN_PORCESS)):
 		request.session["msg"] = "You already submitted a parking!!!"
 		return render(request, 'polls/hotspot.html')
 
@@ -580,7 +587,7 @@ def get_parkings_by_radius(lat1, lng1, radius, wanted_parking_time):
 			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
 			
 			if (current_dist <= radius and
-				parking.status == "available"):
+				parking.status == ParkingStatus.AVAILABLE):
 				relevant_parkings.append(parking)
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
@@ -644,7 +651,7 @@ def find_new_parking(request):
 	## Now- locked !
 
 	# If the parking is not free
-	if (chosen_parking.status != "available"):
+	if (chosen_parking.status != ParkingStatus.AVAILABLE):
 		chosen_parking.lock.release()
 		# TOOD: render to unavailable parking dude or pop-up and render to parking list
 		return render(request, 'polls/show_available_parkings.html', \
@@ -685,7 +692,7 @@ def buyer_cancel_parking(request):
 	# TODO: Notify seller purchase is cancelled (reason: buyer cancelled) 
 
 	#if chosen_parking.wait_lock(TIMEOUT_LOCK):
-	chosen_parking.status = "available"
+	chosen_parking.status = ParkingStatus.AVAILABLE
 	chosen_parking.buyer_id = -1
 	chosen_parking.target_address = ""
 	chosen_parking.parking_rate = 0.0000
@@ -709,11 +716,11 @@ def make_exchange(request):
 
 	if (authenticate_pincode(provided_pincode , parking_pincode)): # if authentication succeeded
 		seller.points 			+= chosen_parking.cost
-		offered_parking.status   = 'done'
+		offered_parking.status   = ParkingStatus.DONE
 
 		# update ratings of the seller and buyer
-		update_rating_for_user(seller_user , "done")
-		update_rating_for_user(buyer_user , "done")
+		update_rating_for_user(seller_user , ParkingStatus.DONE)
+		update_rating_for_user(buyer_user , ParkingStatus.DONE)
 
 	else:
 		offered_parking.attempt_failure += 1
@@ -755,14 +762,14 @@ def seller_cancel_parking(request):
 	# Lock to edit the object 
 	#if offered_parking.wait_lock(TIMEOUT_LOCK): TODO: what to do with the lock??? 
 		
-	if (offered_parking.status == "available"): # no harm done
-		offered_parking.status == "canceled"
+	if (offered_parking.status == ParkingStatus.AVAILABLE): # no harm done
+		offered_parking.status == ParkingStatus.CANCELED
 		#offered_parking.lock.release()
 		offered_parking.save()
 
 
 	else : # Someone already bought the parking
-		reset_parking(offered_parking, buyer_id, "canceled",-1,offered_parking.target_address,-1)
+		reset_parking(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address,-1)
 		#offered_parking.lock.release()
 
 		seller_user.rating *= 0.9
@@ -799,7 +806,7 @@ def update_rating_for_user(user, status): #TODO: fix rating for user!!!!!!!!!!!!
 	# diff = 0
 
 	# switch() {
-	# case "available":
+	# case ParkingStatus.AVAILABLE:
 	# 	diff = 1;
 	# }
 
@@ -837,7 +844,7 @@ def provide_streets_to_query(request):
 #	TODO: init parking_actual_rank 
 def calculate_environment_average(spot):
 
-	neighbors = filter_last_days_spots_by_status(HOURS_IN_DAY, 'done')
+	neighbors = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.DONE)
 	dist_list = []
 	total_distance_sum = 0
 	weighted_average = 0
@@ -885,7 +892,7 @@ def get_all_old_purchases_color_classification():
 
 	#get all purchases that were changed to status "done" in the last NUMBER_OF_DAYS_FOR_STATISTICS 
 	
-	all_done_spots = filter_last_days_spots_by_status(NUMBER_OF_DAYS_FOR_STATISTICS, 'done')
+	all_done_spots = filter_last_days_spots_by_status(NUMBER_OF_DAYS_FOR_STATISTICS, ParkingStatus.DONE)
 	spots_to_display = [] 
 
 	if all_done_spots:
@@ -941,7 +948,7 @@ def get_current_spots_color_classification():
 
 	#classify done&& available
 
-	spots_done_last_hour = filter_last_days_spots_by_status(HOURS_IN_DAY, 'done')
+	spots_done_last_hour = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.DONE)
 
 	spots_to_display = [] 
 
@@ -955,7 +962,7 @@ def get_current_spots_color_classification():
 			spots_to_display.append({parking_spot:spot, spot_rate: spot_color})
 
 	
-	spots_available = filter_last_days_spots_by_status(HOURS_IN_DAY, 'available')
+	spots_available = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.AVAILABLE)
 
 	if spots_available:
 		for spot in spots_available:
