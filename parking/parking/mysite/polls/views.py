@@ -933,7 +933,7 @@ def provide_streets_to_query(request):
  spot_average = nw1*neighbor_rate_1 + *** +  nwk*neighbor_rate_k
  assume stat_rating was initialized'''
  
-#	TODO: init parking_actual_rank 
+#	TODO: init parking_actual_rank  
 def calculate_environment_average(spot_stat):
 	now = datetime.datetime.now()
 
