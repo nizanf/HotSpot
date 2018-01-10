@@ -24,7 +24,7 @@ urlpatterns = [
 
     url(r'^offer_new_parking/$', views.offer_new_parking, name='offer_new_parking'),
     url(r'^report_free_parking/$', views.report_free_parking, name='report_free_parking'),
-    #url(r'^find_new_parking/$', views.find_new_parking, name='find_new_parking'),
+    url(r'^find_new_parking/$', views.find_new_parking, name='find_new_parking'),
   
     url(r'^update_spots_on_map/$', views.update_spots_on_map, name='update_spots_on_map'),
 

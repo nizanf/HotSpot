@@ -55,6 +55,22 @@
                     
 
                     </header>
+
+      <form name="form" id="form" method="post" action="{% url 'polls:find_new_parking'  %}" >
+        {% csrf_token %}
+
+        <tr><td hidden><input type='text' name ='parking_id' id='parking_id'/> </td> </tr>  
+        <tr><td hidden><input type='text' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
+        <tr><td hidden><input type='text' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
+
+        <tr><td>Seller Name:<input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
+        <tr><td>Seller Rating:<input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
+
+
+        <tr><td></td><td><input type='submit' value='Submit'></td></tr> 
+      </form>
+    
+
     <script>
 
 
@@ -64,16 +80,21 @@
             var map;
 
             function update_spots_on_map(lat, lng, radius, minutes) {
+                alert("target_lng" + target_lng);
+                  
 
+                
                 var a = $.ajax({
                   type: "POST",
                   url:"/update_spots_on_map/",
-                  data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'lat':lat, 'lng':lng, 'radius':radius, 'minutes':minutes }, 
+                  data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'lat':target_lat, 'lng':target_lng, 'radius':radius, 'minutes':minutes }, 
                         dataType: 'json',
                   async: false,
                         success : function(data) {
                               rel_park = data.relevant_parkings
                               free_rel_park = JSON.parse(data.relevant_free_parkings)
+                              console.log(rel_park);
+                              console.log(free_rel_park);
                               
                         },
                   error : function(data) {
@@ -144,10 +165,15 @@
             //add marker function
             function addParkingMarker(parking){
         
+                alert("messi");
                 seller_user = parking.fields.user
                 alert(seller_user)
 
-                coords = { lat:parseFloat(parking.fields.parking_address_lat), lng:parseFloat(parking.fields.parking_address_lng)}
+
+                var latFloat = parseFloat(parking.fields.parking_address_lat);
+                var lngFloat = parseFloat(parking.fields.parking_address_lng);
+
+                coords = { lat:latFloat, lng:lngFloat}
                 var new_marker = new google.maps.Marker({
                 position: coords,
                 map:map
@@ -158,23 +184,40 @@
                 seller_id = parking.fields.seller_id;
                 seller_name = parking.fields.seller_name;
                 seller_rating = parking.fields.seller_rating;
+                document.getElementById('seller_name').value = seller_name
+                document.getElementById('seller_rating').value = seller_rating
 
-                //TODO Add the seller's name and rating
-                var new_infoWindow = new google.maps.InfoWindow({ });
-                //set content of infoWindow
+                var new_infoWindow = new google.maps.InfoWindow({
+                    content: document.getElementById('form')
+                });
 
-                new_infoWindow.setContent("<p><b>" + seller_name + "<b/><br/>" + 
-                  "Raiting: " + seller_rating + "<br/></p>");
 
                 new_marker.addListener('click', function() {
+                    console.log(parking);
+                    document.getElementById('parking_id').value = parking.pk;
+                    alert("parking id" + parking.pk);
                     new_infoWindow.open(map, new_marker);
                     setTimeout(function () { new_infoWindow.close(); }, 5000);
                 }); 
                 
             } // End addParkingMarker
+            var points = '{{request.user.profile.points}}';
+            var parking_price = 10;
+            function myFunction() {
+              if (points < parking_price) {
+                  alert("Sorry dude, you don't have enough points");
+                  
+              }
 
+              
+            }
 
+            var target_lat;
+            var target_lng;
+                                      
             function geocodeAddress(geocoder, resultsMap) {
+               // target_lat = '';
+               // target_lng = '';
                 var address = document.getElementById('address').value;
                 var radius = document.getElementById('radius').value;
                 var minutes = document.getElementById('minutes').value;
@@ -184,10 +227,19 @@
                                       var location = results[0].geometry.location;
                                             resultsMap.setCenter(location);
 
-                                      var lat = location.lat();
-                                      var lng = location.lng();
+                                      target_lat = location.lat();
+                                      target_lng = location.lng();
+
+                                      alert("Or" + target_lng);
                                       console.log("2");
-                                      update_spots_on_map(lat, lng, radius, minutes);
+                                      update_spots_on_map(target_lat, target_lng, radius, minutes);
+
+                                      document.getElementById("target_address_lat").value = target_lat;
+                                      document.getElementById("target_address_lat").style.visibility = "hidden";
+
+                                      document.getElementById("target_address_lng").value = target_lng;
+                                      document.getElementById("target_address_lng").style.visibility = "hidden";
+
 
                                       console.log("3");
                                       //loop to add -markers

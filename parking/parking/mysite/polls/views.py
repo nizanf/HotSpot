@@ -19,6 +19,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from math import radians, cos, sin, asin, sqrt
 
+DEFAULT_PARKING_RATE = 2
 MIN_POINTS = 0 
 TIMEOUT_RELOGIN = 10
 TIMEOUT_LOCK = 10
@@ -40,12 +41,17 @@ HOURS_IN_DAY = 24
 DAYS_IN_WEEK = 7
 HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
 
+DIST_HIGH_BOUND_RATE_2 = 1000
+DIST_HIGH_BOUND_RATE_3 = 500
+DIST_HIGH_BOUND_RATE_4 = 200
+DIST_HIGH_BOUND_RATE_5 = 100
+
 
 class ParkingStatus:
 	DONE = 'done'
 	EXPIRED = 'expired'
 	CANCELED = 'canceled'
-	IN_PORCESS = 'in process'
+	IN_PROCESS = 'in process'
 	AVAILABLE = 'available'
 
 
@@ -514,6 +520,7 @@ def update_spots_on_map(request):
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 	
 	relevant_parkings 	= get_parkings_by_radius(lat, lng, radius, given_parking_time)
+	print relevant_parkings
 	
 	relv_park = json.loads(relevant_parkings)
 	for p in relv_park:
@@ -573,6 +580,7 @@ def get_parkings_by_radius(lat1, lng1, radius, wanted_parking_time):
  	# Iterate all over the offered parking spots
   	for parking in all_parkings:
 		parking_time = parking.parking_time
+  		
 		wanted_parking_time_in_datetime = datetime.datetime.strptime(wanted_parking_time, "%Y-%m-%d %H:%M:%S")
 		parking_time_in_datetime = datetime.datetime.strptime(parking_time, "%Y-%m-%d %H:%M:%S")
 
@@ -580,15 +588,15 @@ def get_parkings_by_radius(lat1, lng1, radius, wanted_parking_time):
 
 
 		if (abs(diff_in_minutes) <= THRESHOLD_RELEVANT_PARKING_TIME_DIFF):
-
 			lat2 = float(str(parking.parking_address_lat))
 			lng2 = float(str(parking.parking_address_lng))
 
 			current_dist = calculate_distance(lat1, lng1, lat2, lng2)
-			
+
 			if (current_dist <= radius and
 				parking.status == ParkingStatus.AVAILABLE):
 				relevant_parkings.append(parking)
+
 
 	serialize_relevant_parking = serializers.serialize("json", relevant_parkings)
 	return serialize_relevant_parking
@@ -617,62 +625,111 @@ def refresh_map(request):
 																	'relevant_free_parkings' : relevant_free_parking })
 	
 '''
-'''
+
 def find_new_parking(request):
 	
-	asked_target_address 	= request.POST.get("asked_target_address")
-	seller_user				= User.objects.get(pk=chosen_parking.seller_id)
+	# Asked address
+	target_address_lat 	= float(request.POST.get("target_address_lat"))
+	target_address_lng 	= float(request.POST.get("target_address_lng"))
 
-	buyer_user_id 		 	= request.user.pk
-	buyer_user 				= User.objects.get(pk=buyer_user_id)
+	print "target_address_lat: ", target_address_lat
+	print "target_address_lng: ", target_address_lng
+
+
+	# Parking
+	parking_id 			= int(request.POST.get("parking_id"))
+	print parking_id, "hola"
+	chosen_parking 		= Purchase.objects.get(pk=parking_id)
+
+	# Seller
+	seller_id 			= int(chosen_parking.seller_id)
+	seller_user			= User.objects.get(pk=chosen_parking.seller_id)
+
+	# Buyer
+	buyer_user_id 		= int(request.user.pk)
+	buyer_user 			= User.objects.get(pk=buyer_user_id)
 
 	# The radius according to the zoom of the user's map
 	radius 				= request.POST.get("radius")
-	parking_id 			= request.POST.get("parking_id")
-	chosen_parking 		= Purchase.objects.get(pk=parking_id)
+	
 
+	# Parking location
+	parking_address_lat = float(chosen_parking.parking_address_lat)
+	parking_address_lng = float(chosen_parking.parking_address_lng)
 
+	# TODO: Remove
 	# Lock to edit the object
-	if not chosen_parking.wait_lock(TIMEOUT_AVAILABLE_PARKING):
-		chosen_parking.lock.release()
-		# TOOD: render to unavailable parking dude or pop-up and render to parking list
-		return render(request, 'polls/show_available_parkings.html', 
-			{ 'relevant_parkings' : 
-				get_parkings_by_radius(asked_target_address, radius, time.now()) })
+	# if not chosen_parking.wait_lock(TIMEOUT_AVAILABLE_PARKING):
+	# 	chosen_parking.lock.release()
+	# 	# TOOD: render to unavailable parking dude or pop-up and render to parking list
+	# 	return render(request, 'polls/show_available_parkings.html', 
+	# 		{ 'relevant_parkings' : 
+	# 			get_parkings_by_radius(asked_target_address, radius, time.now()) })
 
 
 	# Check buyer has enough points
-	if (buyer_user.score < chosen_parking.cost):
-		
-		# In the page link to report points
-		return render(request, 'polls/no_points_page.html')
+	if (buyer_user.profile.points < chosen_parking.cost):
+		request.session["msg"] = "You do not have enough points!!!"
+		return render(request, 'polls/hotspot.html')
 
-
+	# TODO: Remove
 	## Now- locked !
 
 	# If the parking is not free
 	if (chosen_parking.status != ParkingStatus.AVAILABLE):
-		chosen_parking.lock.release()
+		# TODO: Remove
+		#chosen_parking.lock.release()
+		
 		# TOOD: render to unavailable parking dude or pop-up and render to parking list
-		return render(request, 'polls/show_available_parkings.html', \
-			{ 'relevant_parkings' : \
-				get_parkings_by_radius(asked_target_address, radius, time.now()) })
+		request.session["msg"] = "Parking already booked"
+		return render(request, 'polls/hotspot.html')
 	
+
 	# In this stage decerase the point only from the buyer 	
-	buyer_user.points -= chosen_parking.cost
+	buyer_user.profile.points -= chosen_parking.cost
 	buyer_user.save()
 	
-	# TODO: Notify the buyer the pincode
-	pin_code = generate_new_pin_code() 
+	# TODO: Last activity for buyer- Notify the buyer the pincode
+	pin_code = chosen_parking.pin_code 
+	dist_in_meters = calculate_distance(parking_address_lat, parking_address_lng, target_address_lat, target_address_lng)
+	parking_rating = dist_to_parking_rate(dist_in_meters)
 
-	rate = calculate_distance(given_target_address, chosen_parking.parking_address)
-	reset_parking(chosen_parking, buyer_user_id, "in process",rate,asked_target_address,pin_code)
+	# Save data to DB
+	update_parking_data(chosen_parking, buyer_user_id, ParkingStatus.IN_PROCESS, parking_rating ,target_address_lat, target_address_lng, pin_code)
 	
-	chosen_parking.lock.release()
+	# TODO: Remove
+	#chosen_parking.lock.release()
 	
-	return render(request, 'polls/parking_purchased.html')
+	request.session["msg"] = "Parking booked successfuly. For more details, click on - last activity"
+	return render(request, 'polls/hotspot.html')
 
-'''
+def dist_to_parking_rate(dist):
+
+	ret = DEFAULT_PARKING_RATE
+
+	if (dist < DIST_HIGH_BOUND_RATE_5):
+		ret = 1
+	elif (dist < DIST_HIGH_BOUND_RATE_4):
+		ret = 0.8
+	elif (dist < DIST_HIGH_BOUND_RATE_3):
+		ret = 0.6
+	elif (dist < DIST_HIGH_BOUND_RATE_2):
+		ret = 0.4
+	else: 		# ==(dist < DIST_HIGH_BOUND_RATE_1):
+		ret = 0.2
+
+	return ret
+
+
+def update_parking_data(purchase, buyer_id, status,rate,target_address_lat, target_address_lng, pincode):
+	purchase.buyer_id			= buyer_id 	# user id
+	purchase.status 			= status
+   	purchase.parking_rate 		= rate  
+	purchase.target_address_lat = target_address_lat
+	purchase.target_address_lng = target_address_lng
+	purchase.pin_code			= pincode
+	purchase.save()
+
 
 def buyer_cancel_parking(request):
 	
@@ -702,7 +759,7 @@ def buyer_cancel_parking(request):
 	data = {'msg': "parking canceled"}
 	return JsonResponse(data)
 
-
+'''
 # when seller insert the pincode 
 def make_exchange(request):
 	parking_id 			= request.POST.get("parking_id")
@@ -736,14 +793,7 @@ def make_exchange(request):
 			return render(request, 'polls/deal_cancelled.html')
 			
 
-def reset_parking(purchase, buyer_id, status,rate,target_address,pincode):
-	purchase.buyer_id			= buyer_id 	# user id
-	purchase.status 			= status
-   	purchase.parking_rate 		= rate  
-	purchase.target_address 	= target_address
-	purchase.pin_code			= pincode
-	purchase.save()
-
+'''
 #TODO make sure when locking the parking dont need to save the acquiere to the database
 #when to save? is the acquiere recursive?
 def seller_cancel_parking(request):
@@ -769,7 +819,7 @@ def seller_cancel_parking(request):
 
 
 	else : # Someone already bought the parking
-		reset_parking(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address,-1)
+		update_parking_data(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address,-1)
 		#offered_parking.lock.release()
 
 		seller_user.rating *= 0.9
@@ -787,13 +837,10 @@ def seller_cancel_parking(request):
 
 
 
-def generate_new_pin_code():
-	return randint(1000, 9999)
-		
-	
+'''	
 def authenticate_pincode(provided_pincode, actual_pincode):
 	return provided_pincode == actual_pincode
-
+'''
 
 def update_rating_for_user(user, status): #TODO: fix rating for user!!!!!!!!!!!!!!!!!1
 
@@ -832,16 +879,16 @@ def provide_streets_to_query(request):
 	for street_name, grade in data.iteritems():
 		if (grade > 3):
 
-'''
 
 ############################################################################################HeatMap
-'''
+
  given a spot - calculate it's current avreage rate
  for each Purchase that was completed('done') today (:= neighbor)- assign with influence weight (:=nw) on the current spot
  spot_average = nw1*neighbor_rate_1 + *** +  nwk*neighbor_rate_k
  assume parking_actual_rank was initialized when the spot status was modified to done
 '''
 #	TODO: init parking_actual_rank 
+'''
 def calculate_environment_average(spot):
 
 	neighbors = filter_last_days_spots_by_status(HOURS_IN_DAY, ParkingStatus.DONE)
@@ -873,7 +920,7 @@ def calculate_environment_average(spot):
 	return weighted_average
 
 
-'''each old purchase has actual_rating derived from: 0.33*(old_rating) + 0.66*(live_environment_average )'''
+each old purchase has actual_rating derived from: 0.33*(old_rating) + 0.66*(live_environment_average )
 
 # TODO: issue here because we update the field actual_rank for
 # each done spot with differnt rage because i depends on which coor we calc now
@@ -1005,3 +1052,4 @@ def get_spots_with_colors():
 
 # green points 
 
+'''
