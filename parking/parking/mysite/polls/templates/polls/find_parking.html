@@ -80,7 +80,7 @@
             var map;
 
             function update_spots_on_map(lat, lng, radius, minutes) {
-                alert("target_lng" + target_lng);
+
                   
 
                 
@@ -163,10 +163,7 @@
             //add marker function
             function addParkingMarker(parking){
         
-                alert("messi");
                 seller_user = parking.fields.user
-                alert(seller_user)
-
 
                 var latFloat = parseFloat(parking.fields.parking_address_lat);
                 var lngFloat = parseFloat(parking.fields.parking_address_lng);
@@ -187,15 +184,15 @@
 
                 var new_infoWindow = new google.maps.InfoWindow({
                     content: document.getElementById('form')
+
                 });
 
 
                 new_marker.addListener('click', function() {
-                    console.log(parking);
-                    document.getElementById('parking_id').value = parking.pk;
-                    alert("parking id" + parking.pk);
-                    new_infoWindow.open(map, new_marker);
-                    setTimeout(function () { new_infoWindow.close(); }, 5000);
+
+                    	new_infoWindow.open(map, new_marker);
+		  	document.getElementById('parking_id').value = parking.pk;
+                    	setTimeout(function () { new_infoWindow.close(); }, 5000);
                 }); 
                 
             } // End addParkingMarker
@@ -228,7 +225,7 @@
                                       target_lat = location.lat();
                                       target_lng = location.lng();
 
-                                      alert("Or" + target_lng);
+
                                       console.log("2");
                                       update_spots_on_map(target_lat, target_lng, radius, minutes);
 

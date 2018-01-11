@@ -908,13 +908,13 @@ def seller_cancel_parking(request):
 	# Lock to edit the object 
 	#if offered_parking.wait_lock(TIMEOUT_LOCK): TODO: what to do with the lock??? 
 		
-	if (offered_parking.status == ParkingStatus.AVAILABLE): # no harm done
-		offered_parking.status == ParkingStatus.CANCELED
-		#offered_parking.lock.release()
-		offered_parking.save()
 
 
-	else : # Someone already bought the parking
+	if (offered_parking.status != ParkingStatus.AVAILABLE): # no harm done
+
+
+
+	 	# Someone already bought the parking
 
 		update_parking_data(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address_lat, 								offered_parking.target_address_lng,-1)
 		#offered_parking.lock.release()
@@ -927,7 +927,11 @@ def seller_cancel_parking(request):
 		seller_user.profile.save()
 		buyer_user.profile.points  += (2*offered_parking.cost) 			# Compensate buyer
 		#TODO: notify buyer
+		
 		buyer_user.save()
+
+	offered_parking.status = ParkingStatus.CANCELED
+	offered_parking.save()
 
 	data = {'msg': "parking canceled"}
 	return JsonResponse(data)

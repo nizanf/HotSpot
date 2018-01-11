@@ -4,13 +4,13 @@
 <head>
   <title>Find Parking</title>
 
-	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
 
 
-	{% load static %}
+  {% load static %}
 
-  	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
-  	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
       <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
       <meta charset="utf-8">
 </head>
@@ -19,8 +19,8 @@
   <div class="all_site">
       <header>
           <div class="logo">
-		{% load static %}
-              	<img src="{% static "_images/cars.jpg" %}" height="49"/>          
+    {% load static %}
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
           </div>  
           <nav>
               <ul>
@@ -32,18 +32,18 @@
           <!-- background picture define in find_parking.css -->
           <div class="back"></div>
           <div id="floating-panel">
-		<input id="address" type="textbox" value="Tel Aviv">
-		<input id="find_parking" type="button" value="Find Parking"><br>
-		<input id="radius" type="textbox" value="100"><font color="white"> meters</font><br>
-		<select id='minutes' name = 'minutes'> +
-			<option value=5 SELECTED >5 min</option>
-			<option value=10>10 min</option>
-			<option value=15>15 min</option>
-			<option value=20>20 min</option>
-			<option value=25>25 min</option>
-			<option value=30>30 min</option>
+    <input id="address" type="textbox" value="Tel Aviv">
+    <input id="find_parking" type="button" value="Find Parking"><br>
+    <input id="radius" type="textbox" value="100"><font color="white"> meters</font><br>
+    <select id='minutes' name = 'minutes'> +
+      <option value=5 SELECTED >5 min</option>
+      <option value=10>10 min</option>
+      <option value=15>15 min</option>
+      <option value=20>20 min</option>
+      <option value=25>25 min</option>
+      <option value=30>30 min</option>
 
-		</select>
+    </select>
 
 
 
@@ -55,154 +55,229 @@
                     
 
                     </header>
-                    <script>
-                        var marker;
-                        var infoWindow;
 
-			function update_spots_on_map(lat, lng, radius, minutes) {
+      <form name="form" id="form" method="post" action="{% url 'polls:find_new_parking'  %}" >
+        {% csrf_token %}
 
-				$.ajax({
-					type: "POST",
-					url:"/update_spots_on_map/",
-					data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'lat':lat, 'lng':lng, 'radius':radius, 						'minutes':minutes }, 
-        				dataType: 'json',
-					async: false,
-        				success : function(data) {
+        <tr><td hidden><input type='text' name ='parking_id' id='parking_id'/> </td> </tr>  
+        <tr><td hidden><input type='text' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
+        <tr><td hidden><input type='text' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
 
-            					alert(data.relevant_parkings);
-            					alert(data.relevant_free_parkings);
-
-        				},
-					error : function(data) {
-						alert("fail");
-					}			
-		
-			
-				} );
-			}
+        <tr><td>Seller Name:<input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
+        <tr><td>Seller Rating:<input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
 
 
-                        function initMap(){
-                            //map options
-
-                            var mapCanvas = document.getElementById("map");
-                            var myCenter = new google.maps.LatLng(32.121678, 34.791143);
-                            var mapOptions = {center: myCenter, zoom: 14};
-                        
-                            //new map
-                            var map = new google.maps.Map(mapCanvas,mapOptions);
-                            
-                            var geocoder = new google.maps.Geocoder();
-                            document.getElementById('find_parking').addEventListener('click', function() {
-
-                            	geocodeAddress(geocoder, map);
-
-                            });
+        <tr><td></td><td><input type='submit' value='Submit'></td></tr> 
+      </form>
     
 
+    <script>
 
-                            // Array off markers- Parking spaces published
-                            //TODO: how to get coords from database  
-                            var markers = [
-                                {
-                                    coords:{lat:32.121678, lng:34.873},
-                                    content : '<h1>Adam sendler rating:269</h1>'
-                                },
-                                {
-                                    coords:myCenter,
-                                    content : '<h1>the center of the map</h1>'
-                                }
-                            ];              
+
+
+            var rel_park;
+            var free_rel_park;
+            var map;
+
+            function update_spots_on_map(lat, lng, radius, minutes) {
+
+                  
+
+                
+                var a = $.ajax({
+                  type: "POST",
+                  url:"/update_spots_on_map/",
+                  data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'lat':target_lat, 'lng':target_lng, 'radius':radius, 'minutes':minutes }, 
+                        dataType: 'json',
+                  async: false,
+                        success : function(data) {
+                              rel_park = data.relevant_parkings
+                              free_rel_park = JSON.parse(data.relevant_free_parkings)
+                              
+                        },
+                  error : function(data) {
+                    alert("fail to update spots on map");
+                  }     
+            
+              
+                } );
+            }
+
+            function initMap(){
+                //map options
+                var markerMe;
+                var infoWindowMe = new google.maps.InfoWindow({
+                });
+                var mapCanvas = document.getElementById("map");
+                var myCenter = new google.maps.LatLng(32.121678, 34.793143);
+                var mapOptions = {center: myCenter, zoom: 14};
+            
+                //new map
+                map = new google.maps.Map(mapCanvas,mapOptions);
+                
+                var geocoder = new google.maps.Geocoder();
+                document.getElementById('find_parking').addEventListener('click', function() {
+
+                  geocodeAddress(geocoder, map);
+
+                });
+
+
+
+                // Array off markers- Parking spaces published
+                //TODO: how to get coords from database  
+                // var markers = [
+                //     {
+                //         coords:{lat:32.121678, lng:34.873},
+                //         content : '<h1>Adam sendler rating:269</h1>'
+                //     },
+                //     {
+                //         coords:myCenter,
+                //         content : '<h1>the center of the map</h1>'
+                //     }
+                // ]; 
+
+                
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                      var pos = {
+                      lat: position.coords.latitude,
+                      lng: position.coords.longitude
+                      };
+ 
+                      infoWindowMe.setPosition(pos);
+                      infoWindowMe.setContent('Me');
+                      infoWindowMe.open(map);
+                      map.setCenter(pos);
+                  }, function() {
+                      handleLocationError(true, infoWindowMe, map.getCenter());
+                  });
+                } else {
+                // Browser doesn't support Geolocation
+                handleLocationError(false, infoWindowMe, map.getCenter());
+                }
+            } // End initMap function
+
+
+            //add marker function
+            function addParkingMarker(parking){
+        
+                seller_user = parking.fields.user
+
+                var latFloat = parseFloat(parking.fields.parking_address_lat);
+                var lngFloat = parseFloat(parking.fields.parking_address_lng);
+
+                coords = { lat:latFloat, lng:lngFloat}
+                var new_marker = new google.maps.Marker({
+                position: coords,
+                map:map
+                //TODO if we want change image of marker
+                //icon
+                });
+
+                seller_id = parking.fields.seller_id;
+                seller_name = parking.fields.seller_name;
+                seller_rating = parking.fields.seller_rating;
+                document.getElementById('seller_name').value = seller_name
+                document.getElementById('seller_rating').value = seller_rating
+
+                var new_infoWindow = new google.maps.InfoWindow({
+                    content: document.getElementById('form')
+
+                });
+
+
+                new_marker.addListener('click', function() {
+
+                    
+
+                    	new_infoWindow.open(map, new_marker);
+		  	document.getElementById('parking_id').value = parking.pk;
+                    	setTimeout(function () { new_infoWindow.close(); }, 5000);
+                }); 
+                
+            } // End addParkingMarker
+            var points = '{{request.user.profile.points}}';
+            var parking_price = 10;
+            function myFunction() {
+              if (points < parking_price) {
+                  alert("Sorry dude, you don't have enough points");
+                  
+              }
+
+              
+            }
+
+            var target_lat;
+            var target_lng;
+                                      
+            function geocodeAddress(geocoder, resultsMap) {
+               // target_lat = '';
+               // target_lng = '';
+                var address = document.getElementById('address').value;
+                var radius = document.getElementById('radius').value;
+                var minutes = document.getElementById('minutes').value;
+                  geocoder.geocode({'address': address}, function(results, status) {
+                                  if (status === 'OK') {
+                                      console.log("1");
+                                      var location = results[0].geometry.location;
+                                            resultsMap.setCenter(location);
+
+                                      target_lat = location.lat();
+                                      target_lng = location.lng();
+
+
+                                      console.log("2");
+                                      update_spots_on_map(target_lat, target_lng, radius, minutes);
+
+                                      document.getElementById("target_address_lat").value = target_lat;
+                                      document.getElementById("target_address_lat").style.visibility = "hidden";
+
+                                      document.getElementById("target_address_lng").value = target_lng;
+                                      document.getElementById("target_address_lng").style.visibility = "hidden";
+
+
+                                      console.log("3");
+                                      //loop to add -markers
+                                      for(var i = 0;i < rel_park.length;i++){
+                                          
+                                          addParkingMarker(rel_park[i]);
+                                          console.log(rel_park[i]);
+                                      }
+                                      console.log("4");
+                                      //loop to add -markers
+                                      for(var i = 0;i < free_rel_park.length;i++){
+                                          addParkingMarker(free_rel_park[i]);
+                                      }
+                                      console.log("5");
+                                      
+
+                                            // var marker = new google.maps.Marker({
+                                            // map: resultsMap,
+                                            //position: results[0].geometry.location
+                                            //});
+                                  } else {
+                                    alert('Geocode was not successful for the following reason: ' + status);
+                                  }
+                            });
+                } // End geocodeAddress
+                function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+                    infoWindow.setPosition(pos);
+                    infoWindow.setContent(browserHasGeolocation ?
+                                        'Error: The Geolocation service failed.' :
+                                        'Error: Your browser doesn\'t support geolocation.');
+                    infoWindow.open(map);
+                } // End handleLocationError
+      </script>
+      
+      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
                         
-                            //loop to add -markers
-                            for(var i = 0;i < markers.length;i++){
-                                addMarker(markers[i]);
-                            }
+        <!--<footer>
+            find your spot
+        </footer> -->  
+        <p class="clear"></p>  
 
-                            //add marker function
-                            function addMarker(props){
-
-                                marker = new google.maps.Marker({
-                                position: props.coords,
-                                map:map
-                                //TODO if we want change image of marker
-                                //icon
-                                });
-
-                                
-                                //TODO Add the seller's name and rating
-                                infoWindow = new google.maps.InfoWindow({
-                                    content:  props.content
-                                });
-
-                                marker.addListener('click', function() {
-                                    infoWindow.open(map, marker);
-                                }); 
-                                
-                                
-                            }
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(function(position) {
-                                  var pos = {
-                                  lat: position.coords.latitude,
-                                  lng: position.coords.longitude
-                                  };
-
-                                  infoWindow.setPosition(pos);
-                                  infoWindow.setContent('Location found.');
-                                  infoWindow.open(map);
-                                  map.setCenter(pos);
-                              }, function() {
-                                  handleLocationError(true, infoWindow, map.getCenter());
-                              });
-                            } else {
-                            // Browser doesn't support Geolocation
-                            handleLocationError(false, infoWindow, map.getCenter());
-                            }
-                        } // End initMap function
-
-                        function geocodeAddress(geocoder, resultsMap) {
-				var address = document.getElementById('address').value;
-				var radius = document.getElementById('radius').value;
-				var minutes = document.getElementById('minutes').value;
-		    		geocoder.geocode({'address': address}, function(results, status) {
-		               	if (status === 'OK') {
-
-					var location = results[0].geometry.location;
-				        resultsMap.setCenter(location);
-
-					var lat = location.lat();
-					var lng = location.lng();
-
-					var list_of_spots = update_spots_on_map(lat, lng, radius, minutes);
-
-
-
-                                // var marker = new google.maps.Marker({
-                                // map: resultsMap,
-                                //position: results[0].geometry.location
-                                //});
-		             	} else {
-		                	alert('Geocode was not successful for the following reason: ' + status);
-		               	}
-                          });
-                        }
-                        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-                            infoWindow.setPosition(pos);
-                            infoWindow.setContent(browserHasGeolocation ?
-                                                'Error: The Geolocation service failed.' :
-                                                'Error: Your browser doesn\'t support geolocation.');
-                            infoWindow.open(map);
-                        }
-                        </script>
-                        
-                        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
-                        
-                    <footer>
-                        find your spot
-                    </footer>  
-                    <p class="clear"></p>  
-
-                </div>  
-            </body>
-            </html>
+    </div>  
+</body>
+</html>
