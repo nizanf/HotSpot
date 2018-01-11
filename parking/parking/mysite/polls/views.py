@@ -296,8 +296,11 @@ def login_user(request):
 	# found user
 	if user : 
 
+		print(user)
+
+
 		# If user is banned
-	  	if (user.profile.is_blocked):
+	  	if (user.profile.is_blocked == 1):
 			request.session['msg'] = "User is blocked!"
 	  		return render(request, 'polls/is_login.html', {"is_login":"false"})
 	  	
