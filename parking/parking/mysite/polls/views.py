@@ -65,23 +65,29 @@ def call_login(request):
 	return render(request, 'polls/login.html')
 
 def call_homepage(request):
+	update_user_spots_status (request.user.pk)
 	return render(request, 'polls/hotspot.html')
 
 def call_register(request):
+	update_user_spots_status (request.user.pk)
 	return render(request, 'polls/register.html')
 
 def call_report(request):
+	update_user_spots_status (request.user.pk)
 	return render(request, 'polls/report_parking.html')
 
 def call_find(request):
+	update_user_spots_status (request.user.pk)
 	return render(request, 'polls/find_parking.html')
 
 def call_heatmap(request):
+	update_user_spots_status (request.user.pk)
 	points = get_statistics_color_classification()
-	print ("\n\n\npoints = "+str(points)+"\n\n\n")
 	return render(request, 'polls/heatmap.html', {'points':points})
 
 def checkIfActivityValid(request):
+
+	update_user_spots_status (request.user.pk)
 
 	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
 	max_pk = 0
@@ -107,6 +113,8 @@ def checkIfActivityValid(request):
 
 def call_last_activity(request):
 
+	update_user_spots_status (request.user.pk)
+
 	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
 	max_pk = 0
 	last_activity = None
@@ -114,11 +122,9 @@ def call_last_activity(request):
 	
 	all_purchase = list(sell_purchase)  +list(buy_purchase)
 
+
+
 	for purchase in all_purchase:
-		if ("Binyamin mi-Tudela St 1" in purchase.parking_address):
-			print(" Binyamin pk = "+str(purchase.pk))
-		if ("Dr Haim Brody St 12" in purchase.parking_address):
-			print(" Dr Haim pk = "+str(purchase.pk))
 
 		if (purchase.pk > max_pk):
 			max_pk = purchase.pk
@@ -364,6 +370,7 @@ def register(request):
 
 
 def logout_user(request):
+	update_user_spots_status (request.user.pk)
 	"""	
 		Logout method
 	"""
@@ -377,7 +384,7 @@ def extract_street_name(parking_address):
 		return parking_address.split(",")[0]
 
 def report_free_parking(request):
-
+	update_user_spots_status (request.user.pk)
 	print("here1")
 	given_lat = float(request.POST.get("lat_address"))
 	given_lng = float(request.POST.get("lng_address"))
@@ -652,7 +659,7 @@ def is_free_parking_time_relevant(parking_time):
 
 
 def get_parkings_by_radius(lat1, lng1, radius, wanted_parking_time):
-	
+
 	all_parkings = Purchase.objects.all()
 
  	relevant_parkings = []
@@ -707,7 +714,7 @@ def refresh_map(request):
 '''
 
 def find_new_parking(request):
-	
+
 	valid_activity = checkIfActivityValid(request)
 	if (valid_activity == True):
 		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
