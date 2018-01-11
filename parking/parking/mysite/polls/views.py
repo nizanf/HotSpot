@@ -993,8 +993,9 @@ def calculate_environment_average(spot_stat):
 	now = datetime.datetime.now()
 
 	neighbors = Statistics.objects.filter(hour =  int(now.hour))
-	dist_list = []
-	total_distance_sum = 0
+	inverse_dist_list = []
+	total_inverst_distance_sum = 0
+	normal_value = 0
 	weighted_average = 0
 
 	if not neighbors:
@@ -1008,14 +1009,27 @@ def calculate_environment_average(spot_stat):
 		nbLat = float(nb.lat)
 		nbLng = float(nb.lng)
 
+		# Dist between the spot and the neighbor
 		nbDist = calculate_distance(sLat, sLng, nbLat, nbLng)
 
-		total_distance_sum += nbDist
-		dist_list.append(nbDist)
+		# Save the iverse of distance - in order to closesr neighbor will affect more then other
+		inverseDist = 0.001 if nbDist == 0 else float(1) / nbDist
+
+		# Sum all inverse for build the normal value later
+		total_inverst_distance_sum += inverseDist
+
+		inverse_dist_list.append(inverseDist)
+
+	# Calc the normal value
+	normal_value = float(1) / total_inverst_distance_sum
 
 	# calcualte environment_average
 	for i in range (0, len(neighbors)):
-		nbw = float(dist_list[i]) / total_distance_sum
+
+		# Each neighbor's weight is the inverse of dist (but normalized)
+		nbw = float(inverse_dist_list[i]) *  normal_value
+
+		# Sum for calc weighted
 		weighted_average += float(neighbors[i].rating) * nbw
 
 	return weighted_average
