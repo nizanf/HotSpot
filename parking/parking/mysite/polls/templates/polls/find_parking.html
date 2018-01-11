@@ -55,6 +55,7 @@
                     
 
                     </header>
+                
 
       <form name="form" id="form" method="post" action="{% url 'polls:find_new_parking'  %}" >
         {% csrf_token %}
@@ -62,13 +63,13 @@
         <tr><td hidden><input type='text' name ='parking_id' id='parking_id'/> </td> </tr>  
         <tr><td hidden><input type='text' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
         <tr><td hidden><input type='text' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
-				
+       
         <tr><td><input type='text' name ='parking_address' id='parking_address'/> </td> </tr>
-	<tr><td><input type='text' name ='parking_time' id='parking_time'/> </td> </tr>
+	    <tr><td><input type='text' name ='parking_time' id='parking_time'/> </td> </tr>
         <tr><td><input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
         <tr><td><input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
 
-
+       
         <tr><td></td><td><input type='submit' value='Submit'></td></tr> 
       </form>
     
@@ -161,7 +162,7 @@
                 }
             } // End initMap function
 
-	var new_infoWindow;
+	        var new_infoWindow;
 
             //add marker function
             function addParkingMarker(parking, parking_type){
@@ -170,17 +171,36 @@
 
                 var latFloat = parseFloat(parking.fields.parking_address_lat);
                 var lngFloat = parseFloat(parking.fields.parking_address_lng);
-
+		        var imageFree ={ 
+                    url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
+                    scaledSize: new google.maps.Size(30, 50), // scaled size
+                    origin: new google.maps.Point(0,0), // origin
+                    anchor: new google.maps.Point(0, 0) // anchor
+             
+                }
+                var imagePur = {
+                    url:'https://maxcdn.icons8.com/Share/icon/Maps//marker1600.png',
+                    scaledSize: new google.maps.Size(50, 50), // scaled size
+                    origin: new google.maps.Point(0,0), // origin
+                    anchor: new google.maps.Point(0, 0) // anchor
+             
+                }
+    
                 coords = { lat:latFloat, lng:lngFloat}
+                var i;
+                if (parking_type == "FreeSpot") {
+			        i = imageFree;
+                }
+                else{
+                    i = imagePur;
+                }
+
                 var new_marker = new google.maps.Marker({
                 position: coords,
-                map:map
-                //TODO if we want change image of marker
-                //icon
+                map:map,		
+                icon: i
                 });
 
-
-		
                 new_infoWindow = new google.maps.InfoWindow({
                     content: document.getElementById('form')
 
@@ -189,7 +209,7 @@
 
                 new_marker.addListener('click', function() {
 
-                    	new_infoWindow.open(map, new_marker);
+            new_infoWindow.open(map, new_marker);
 		  	document.getElementById('parking_id').value = parking.pk;
 			document.getElementById('parking_id').style.visibility = "hidden";
 
@@ -273,8 +293,6 @@
                                       //loop to add -markers
 					alert ("free rel_park.length = "+free_rel_park.length);
                                       for(var i = 0;i < free_rel_park.length;i++){
-                                          console.log(rel_park[i]);
-
                                           addParkingMarker(free_rel_park[i], "FreeSpot");
                                       }
                                       console.log("5");
