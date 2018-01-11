@@ -6,12 +6,28 @@
     <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
      
     <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	{% load static %}
     	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
+
+    <style>
+    .checked {
+        color: orange;
+        z-index: 5;
+    }
+    </style>
+
+
 </head>
 
 <body>
+
     <div class="all_site">
         <header>
             <div class="logo">
@@ -20,9 +36,18 @@
             </div>
             <nav>
                 <ul>
-                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>
-                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+
+                    <li>{{request.user.username}}</li>
+                    <li>{{request.user.profile.points}} points</li>
+                    <li>{{request.user.profile.rating}}</li>
+
+
+
+                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
                     <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>
+
                 </ul>
             </nav>
             <div class="head_pic">
@@ -33,6 +58,17 @@
                     </div>
             </div>
         </header>
+
+      <div class = "pull-right">
+        <span id="star1" class="fa fa-star"></span>
+        <span id="star2" class="fa fa-star"></span>
+        <span id="star3" class="fa fa-star"></span>
+        <span id="star4" class="fa fa-star"></span>
+        <span id="star5" class="fa fa-star"></span>
+      </div>
+
+
+
         <div class="main">
             <div class="boxes">
                 <div class="box">
@@ -82,6 +118,16 @@
 
 
 <script type="text/javascript">
+
+
+    var user_rating = '{{request.user.profile.rating}}';
+    console.log(user_rating);
+    for(var i=1; i<=user_rating; i++){
+        console.log(i);
+        document.getElementById("star"+i).classList.add('checked');
+
+
+    }
 
 
     var msg = '{{ request.session.msg }}';

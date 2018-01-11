@@ -396,7 +396,12 @@ def report_free_parking(request):
 	print("here1")
 	given_lat = float(request.POST.get("lat_address"))
 	given_lng = float(request.POST.get("lng_address"))
-	
+
+	if not given_lat or not given_lng:
+
+		request.session["msg"] = "Could not find your location, try again"
+		return render(request, 'polls/hotspot.html')
+
 	request.session["msg"] = ""
 
 	given_parking_address 		= request.POST.get("address") 	
