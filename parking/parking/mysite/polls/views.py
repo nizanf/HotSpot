@@ -26,7 +26,7 @@ TIMEOUT_RELOGIN = 10
 TIMEOUT_LOCK = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
-THRESHOLD_RATING_TO_FREE_SPOT = 1
+THRESHOLD_RATING_TO_FREE_SPOT = -1
 THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000
 FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
@@ -65,6 +65,7 @@ def call_login(request):
 	return render(request, 'polls/login.html')
 
 def call_homepage(request):
+
 	update_user_spots_status (request.user.pk)
 	return render(request, 'polls/hotspot.html')
 
@@ -105,6 +106,9 @@ def checkIfActivityValid(request):
 		if (purchase.pk > max_pk):
 			max_pk = purchase.pk
 			last_activity = purchase
+
+	if last_activity == None:
+		return False
 
 	if last_activity.status == ParkingStatus.AVAILABLE or last_activity.status == ParkingStatus.IN_PROCESS:
 		return True
@@ -301,6 +305,7 @@ def login_user(request):
 		login(request, user)
 		
 	  	request.session['login_failures'] = 0
+	  	request.session['query'] = 0
 	  	request.session['last_failure'] = None
 		return render(request, 'polls/is_login.html', {"is_login":"true"})
 	
@@ -445,10 +450,11 @@ def report_free_parking(request):
 					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 						now = datetime.datetime.now()
 						parking.is_verified = 1
-						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =GREEN)
+						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =GREEN, date=given_parking_time)
 						print("statistics created")
-						calculate_actual_rating(stat)
 
+
+						calculate_actual_rating(stat)
 						for user_id in reporters_ids_list:
 							# Update rank/points to given_reporter_id user
 							reporter_user = User.objects.get(pk=user_id)
@@ -478,9 +484,15 @@ def report_free_parking(request):
 		if (free_parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 			now = datetime.datetime.now()
 			free_parking.is_verified = 1
-			stat = Statistics( lat = given_lat ,lng= given_lng, hour =  int(now.hour),rating =GREEN)
+			stat = Statistics( lat = given_lat ,lng= given_lng, hour =  int(now.hour),rating =GREEN, date=given_parking_time)
 			print("statistics created")
+
+
+			print ("before = "+str(stat.rating))
+
 			calculate_actual_rating(stat)
+			print ("after = "+str(stat.rating))
+
 
 
 
@@ -796,6 +808,17 @@ def find_new_parking(request):
 	# TODO: Remove
 	#chosen_parking.lock.release()
 	
+	# Add purchase to statistics
+	now = datetime.datetime.now()
+	stat = Statistics( lat = target_address_lat,lng= target_address_lng, hour = int(now.hour),rating =parking_rating, date=chosen_parking.parking_time)
+
+	print("befor = "+str(stat.rating))
+
+	print("statistics created for parking: " + str(parking_id))
+	calculate_actual_rating(stat)
+	print("after = "+str(stat.rating))
+
+
 	request.session["msg"] = "Parking booked successfuly. For more details, click on - last activity"
 	return render(request, 'polls/hotspot.html')
 
@@ -990,6 +1013,9 @@ def provide_streets_to_query(request):
  
 #	TODO: init parking_actual_rank  
 def calculate_environment_average(spot_stat):
+	
+	# TODO: Natural neighbor interpolation
+
 	now = datetime.datetime.now()
 
 	neighbors = Statistics.objects.filter(hour =  int(now.hour))
@@ -1022,7 +1048,6 @@ def calculate_environment_average(spot_stat):
 
 	# Calc the normal value
 	normal_value = float(1) / total_inverst_distance_sum
-
 	# calcualte environment_average
 	for i in range (0, len(neighbors)):
 
@@ -1032,6 +1057,7 @@ def calculate_environment_average(spot_stat):
 		# Sum for calc weighted
 		weighted_average += float(neighbors[i].rating) * nbw
 
+	print ("Test gal= " + str(weighted_average))
 	return weighted_average
 
 
@@ -1041,7 +1067,7 @@ update rank for new statistics object: spot
 def calculate_actual_rating(spot_stat):
 
 	spot_rating = spot_stat.rating
-	stat_rating = (OLD_RANK_WEIGHT * spot_rating) + ((1 - OLD_RANK_WEIGHT) * calculate_environment_average(spot_stat))
+	stat_rating = ((1-OLD_RANK_WEIGHT) * spot_rating) + (OLD_RANK_WEIGHT * calculate_environment_average(spot_stat))
 	spot_stat.rating = stat_rating
 	spot_stat.save()
 
@@ -1052,9 +1078,15 @@ def get_statistics_color_classification():
 	now = datetime.datetime.now()	
 	# get all statistics for the current hour from data base
 	all_statistics = Statistics.objects.filter(hour =  int(now.hour) )
+
+	print "Before filter", len(list(all_statistics))
+
+	last_week_statistics = filter_statistics_last_week(all_statistics)
+	print "After filter", len(last_week_statistics)
+	
 	stats_to_display = [] 
 	
-	for stat in all_statistics:
+	for stat in last_week_statistics:
 		curr_rate = stat.rating
 		stat_color = GREEN if curr_rate > COLOR_THRESHOLD else RED # high rating- color in green
 
@@ -1062,6 +1094,19 @@ def get_statistics_color_classification():
 
 	return json.dumps(stats_to_display)	# return JsonResponse(spots_to_display)
 
+
+MINUTES_IN_WEEK = 1 #MINUTES_IN_HOUR*7*24
+
+def filter_statistics_last_week(all_statistics):
+
+	ret = []
+	for stat in all_statistics:
+		print stat.date
+		print minutes_elapsed(stat.date), "gal" 
+		if (minutes_elapsed(stat.date) < MINUTES_IN_WEEK): # Minutes in week
+			ret.append(stat)
+
+	return ret
 
 # def get_stats_with_colors():
 	

@@ -3,7 +3,9 @@
 
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+     
+    <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
 
 	{% load static %}
     	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/HotSpot.css" %}">
@@ -72,6 +74,10 @@
             <p>find your spot</p>
         </footer>  
         <p class="clear"></p>
+
+
+
+
     </div>
 
 
@@ -94,7 +100,19 @@
         } );
     }; 
   
+    var query = '{{request.session.query}}';
+    alert(query);
+    if (query == "0"){
+        alert("here");
 
+        var txt;
+        if (confirm("Press a button!") == true) {
+            txt = "You pressed OK!";
+        } else {
+            txt = "You pressed Cancel!";
+        }
+
+    }
 
 </script>
 

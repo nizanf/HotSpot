@@ -122,3 +122,5 @@ class Statistics(models.Model):
 
 	hour 				= models.IntegerField(default=0)
 	rating				= models.DecimalField(max_digits=8,decimal_places=7,default=Decimal('0.0000'))
+	date				= models.CharField(max_length=200, default="") #  max 30 minutes from the offering time
+	
