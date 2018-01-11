@@ -534,7 +534,7 @@ def user_query(request):
 			return HttpResponse("invalid rating")
 
 
-		user = User.object.get(pk = request.user.pk)
+		user = User.objects.get(pk = request.user.pk)
 
 		user.profile.points += 1
 
