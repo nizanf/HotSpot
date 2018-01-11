@@ -62,9 +62,11 @@
         <tr><td hidden><input type='text' name ='parking_id' id='parking_id'/> </td> </tr>  
         <tr><td hidden><input type='text' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
         <tr><td hidden><input type='text' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
-
-        <tr><td>Seller Name:<input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
-        <tr><td>Seller Rating:<input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
+				
+        <tr><td><input type='text' name ='parking_address' id='parking_address'/> </td> </tr>
+	<tr><td><input type='text' name ='parking_time' id='parking_time'/> </td> </tr>
+        <tr><td><input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
+        <tr><td><input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
 
 
         <tr><td></td><td><input type='submit' value='Submit'></td></tr> 
@@ -159,9 +161,10 @@
                 }
             } // End initMap function
 
+	var new_infoWindow;
 
             //add marker function
-            function addParkingMarker(parking){
+            function addParkingMarker(parking, parking_type){
         
                 seller_user = parking.fields.user
 
@@ -176,13 +179,9 @@
                 //icon
                 });
 
-                seller_id = parking.fields.seller_id;
-                seller_name = parking.fields.seller_name;
-                seller_rating = parking.fields.seller_rating;
-                document.getElementById('seller_name').value = seller_name
-                document.getElementById('seller_rating').value = seller_rating
 
-                var new_infoWindow = new google.maps.InfoWindow({
+		
+                new_infoWindow = new google.maps.InfoWindow({
                     content: document.getElementById('form')
 
                 });
@@ -192,8 +191,34 @@
 
                     	new_infoWindow.open(map, new_marker);
 		  	document.getElementById('parking_id').value = parking.pk;
+			document.getElementById('parking_id').style.visibility = "hidden";
+
+			parking_address = parking.fields.parking_address;
+			parking_time = parking.fields.parking_time;
+			seller_name = parking.fields.seller_name;
+			seller_rating = parking.fields.seller_rating;
+
+			document.getElementById('parking_address').value = "Address: "+parking_address;
+			document.getElementById('parking_time').value = "Time: "+parking_time;
+			document.getElementById('seller_name').value = "Seller Name: "+seller_name;
+			document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
+
+			if (parking_type == "FreeSpot") {
+				document.getElementById('parking_time').style.visibility = "hidden";
+				document.getElementById('seller_name').style.visibility = "hidden";
+				document.getElementById('seller_rating').style.visibility = "hidden";
+
+			} else {
+				document.getElementById('parking_time').style.visibility = "visible";
+				document.getElementById('seller_name').style.visibility = "visible";
+				document.getElementById('seller_rating').style.visibility = "visible";
+
+			}
+
+
                     	setTimeout(function () { new_infoWindow.close(); }, 5000);
                 }); 
+
                 
             } // End addParkingMarker
             var points = '{{request.user.profile.points}}';
@@ -238,15 +263,17 @@
 
                                       console.log("3");
                                       //loop to add -markers
+					alert ("rel_park.length = "+rel_park.length);
                                       for(var i = 0;i < rel_park.length;i++){
                                           
-                                          addParkingMarker(rel_park[i]);
+                                          addParkingMarker(rel_park[i], "Purchase");
                                           console.log(rel_park[i]);
                                       }
                                       console.log("4");
                                       //loop to add -markers
+					alert ("free rel_park.length = "+free_rel_park.length);
                                       for(var i = 0;i < free_rel_park.length;i++){
-                                          addParkingMarker(free_rel_park[i]);
+                                          addParkingMarker(free_rel_park[i], "FreeSpot");
                                       }
                                       console.log("5");
                                       
