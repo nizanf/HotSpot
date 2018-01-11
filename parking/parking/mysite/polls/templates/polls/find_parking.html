@@ -149,9 +149,23 @@
                       lng: position.coords.longitude
                       };
  
-                      infoWindowMe.setPosition(pos);
-                      infoWindowMe.setContent('Me');
-                      infoWindowMe.open(map);
+                      //infoWindowMe.setPosition(pos);
+                      //infoWindowMe.setContent('Me');
+                      //infoWindowMe.open(map);
+
+		    var meimage ={ 
+                    url:'https://furtaev.ru/preview/current_location_map_pointer.png',
+                    scaledSize: new google.maps.Size(50, 50), // scaled size
+                    origin: new google.maps.Point(0,0), // origin
+                    anchor: new google.maps.Point(0, 0) // anchor
+             
+                }		
+		var new_marker = new google.maps.Marker({
+                position: pos,
+                map:map,		
+                icon: meimage
+                });
+
                       map.setCenter(pos);
                   }, function() {
                       handleLocationError(true, infoWindowMe, map.getCenter());
