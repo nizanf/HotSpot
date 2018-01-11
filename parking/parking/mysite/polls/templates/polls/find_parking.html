@@ -59,24 +59,29 @@
 
       <form name="form" id="form" method="post" action="{% url 'polls:find_new_parking'  %}" >
         {% csrf_token %}
-
-        <tr><td hidden><input type='text' name ='parking_id' id='parking_id'/> </td> </tr>  
-        <tr><td hidden><input type='text' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
-        <tr><td hidden><input type='text' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
+        <table>
+        <tr><td><input type='hidden' name ='parking_id' id='parking_id' readonly="true" /> </td> </tr>  
+        <tr><td><input type='hidden' name ='target_address_lat' id='target_address_lat'/> </td> </tr>
+        <tr><td><input type='hidden' name ='target_address_lng' id='target_address_lng'/> </td> </tr>
        
-        <tr><td><input type='text' name ='parking_address' id='parking_address'/> </td> </tr>
-	    <tr><td><input type='text' name ='parking_time' id='parking_time'/> </td> </tr>
-        <tr><td><input type='text' name ='seller_name' id='seller_name'/> </td> </tr>
-        <tr><td><input type='text' name ='seller_rating' id='seller_rating'/> </td> </tr>
+        <tr><td><input name ='parking_address' id='parking_address'/> </td> </tr>
+        <tr><td><input name ='parking_time' id='parking_time'/> </td> </tr>
+        <tr><td><input name ='seller_name' id='seller_name'/> </td> </tr>
+        <tr><td><input name ='seller_rating' id='seller_rating'/> </td> </tr>
 
        
-        <tr><td></td><td><input type='submit' value='Submit'></td></tr> 
+        <tr><td></td><td><input name ='submit' id='submit' type='submit' value='Submit'></td></tr> 
+        </table>
       </form>
     
 
     <script>
 
-
+        document.getElementById('parking_time').style.visibility = "hidden";
+        document.getElementById('seller_name').style.visibility = "hidden";
+        document.getElementById('seller_rating').style.visibility = "hidden";
+        document.getElementById('parking_address').style.visibility = "hidden";
+        document.getElementById('submit').style.visibility = "hidden";
 
             var rel_park;
             var free_rel_park;
@@ -153,16 +158,27 @@
                       //infoWindowMe.setContent('Me');
                       //infoWindowMe.open(map);
 
+<<<<<<< HEAD
+        var meimage ={ 
+=======
 		    var meimage ={ 
+>>>>>>> 6b9dc40e156b806cf588b7f48e0053f749c1d039
                     url:'https://furtaev.ru/preview/current_location_map_pointer.png',
                     scaledSize: new google.maps.Size(50, 50), // scaled size
                     origin: new google.maps.Point(0,0), // origin
                     anchor: new google.maps.Point(0, 0) // anchor
              
+<<<<<<< HEAD
+                }   
+    var new_marker = new google.maps.Marker({
+                position: pos,
+                map:map,    
+=======
                 }		
 		var new_marker = new google.maps.Marker({
                 position: pos,
                 map:map,		
+>>>>>>> 6b9dc40e156b806cf588b7f48e0053f749c1d039
                 icon: meimage
                 });
 
@@ -176,16 +192,15 @@
                 }
             } // End initMap function
 
-	        var new_infoWindow;
+      //    var new_infoWindow;
 
             //add marker function
             function addParkingMarker(parking, parking_type){
         
                 seller_user = parking.fields.user
-
                 var latFloat = parseFloat(parking.fields.parking_address_lat);
                 var lngFloat = parseFloat(parking.fields.parking_address_lng);
-		        var imageFree ={ 
+            var imageFree ={ 
                     url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
                     scaledSize: new google.maps.Size(30, 50), // scaled size
                     origin: new google.maps.Point(0,0), // origin
@@ -202,21 +217,30 @@
     
                 coords = { lat:latFloat, lng:lngFloat}
                 var i;
+                var c;
+                alert("type= " + parking_type);
                 if (parking_type == "FreeSpot") {
-			        i = imageFree;
+
+                    report_time = parking.fields.last_report_time
+                    parking_address =  parking.fields.parking_address
+                    i = imageFree;
+                    c = '<h3><b>'+parking_address+'</h3><h4>'+report_time+'</h4></p>';
+                    alert("messi");
                 }
                 else{
+                  alert("No free spot");
                     i = imagePur;
+                    c = document.getElementById('form');
                 }
-
+                alert("c= " + c);
                 var new_marker = new google.maps.Marker({
-                position: coords,
-                map:map,		
-                icon: i
+                  position: coords,
+                  map:map,    
+                  icon: i
                 });
 
-                new_infoWindow = new google.maps.InfoWindow({
-                    content: document.getElementById('form')
+                var new_infoWindow = new google.maps.InfoWindow({
+                    content: c
 
                 });
 
@@ -224,34 +248,40 @@
                 new_marker.addListener('click', function() {
 
             new_infoWindow.open(map, new_marker);
-		  	document.getElementById('parking_id').value = parking.pk;
-			document.getElementById('parking_id').style.visibility = "hidden";
+        document.getElementById('parking_id').value = parking.pk;
+      document.getElementById('parking_id').style.visibility = "hidden";
 
-			parking_address = parking.fields.parking_address;
-			parking_time = parking.fields.parking_time;
-			seller_name = parking.fields.seller_name;
-			seller_rating = parking.fields.seller_rating;
+      parking_address = parking.fields.parking_address;
+      parking_time = parking.fields.parking_time;
+      seller_name = parking.fields.seller_name;
+      seller_rating = parking.fields.seller_rating;
 
-			document.getElementById('parking_address').value = "Address: "+parking_address;
-			document.getElementById('parking_time').value = "Time: "+parking_time;
-			document.getElementById('seller_name').value = "Seller Name: "+seller_name;
-			document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
+      document.getElementById('parking_address').value = "Address: "+parking_address;
+      document.getElementById('parking_time').value = "Time: "+parking_time;
+      document.getElementById('seller_name').value = "Seller Name: "+seller_name;
+      document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
 
-			if (parking_type == "FreeSpot") {
-				document.getElementById('parking_time').style.visibility = "hidden";
-				document.getElementById('seller_name').style.visibility = "hidden";
-				document.getElementById('seller_rating').style.visibility = "hidden";
-
-			} else {
-				document.getElementById('parking_time').style.visibility = "visible";
-				document.getElementById('seller_name').style.visibility = "visible";
-				document.getElementById('seller_rating').style.visibility = "visible";
-
-			}
+      if (parking_type == "FreeSpot") {
+        document.getElementById('parking_time').style.visibility = "hidden";
+        document.getElementById('seller_name').style.visibility = "hidden";
+        document.getElementById('seller_rating').style.visibility = "hidden";
+        document.getElementById('parking_address').style.visibility = "visible";
+        document.getElementById('submit').style.visibility = "hidden";
 
 
-                    	setTimeout(function () { new_infoWindow.close(); }, 5000);
-                }); 
+      } else {
+        document.getElementById('parking_address').style.visibility = "visible";
+        document.getElementById('parking_time').style.visibility = "visible";
+        document.getElementById('seller_name').style.visibility = "visible";
+        document.getElementById('seller_rating').style.visibility = "visible";
+        document.getElementById('submit').style.visibility = "visible";
+
+
+      }
+
+
+                setTimeout(function () { new_infoWindow.close(); }, 5000);
+          }); 
 
                 
             } // End addParkingMarker
@@ -297,7 +327,7 @@
 
                                       console.log("3");
                                       //loop to add -markers
-					alert ("rel_park.length = "+rel_park.length);
+          alert ("rel_park.length = "+rel_park.length);
                                       for(var i = 0;i < rel_park.length;i++){
                                           
                                           addParkingMarker(rel_park[i], "Purchase");
@@ -305,7 +335,7 @@
                                       }
                                       console.log("4");
                                       //loop to add -markers
-					alert ("free rel_park.length = "+free_rel_park.length);
+          alert ("free rel_park.length = "+free_rel_park.length);
                                       for(var i = 0;i < free_rel_park.length;i++){
                                           addParkingMarker(free_rel_park[i], "FreeSpot");
                                       }
