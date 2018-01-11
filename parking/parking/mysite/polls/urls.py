@@ -30,6 +30,9 @@ urlpatterns = [
 
     url(r'^clear_msg/$', views.clear_msg, name='clear_msg'),
 
+    url(r'^user_query/$', views.user_query, name='user_query'),
+
+
     url(r'^aut_pincode/$', views.aut_pincode, name='aut_pincode'),
 
     url(r'^seller_cancel_parking/$', views.seller_cancel_parking, name='seller_cancel_parking'),

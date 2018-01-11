@@ -86,7 +86,6 @@
 
     var msg = '{{ request.session.msg }}';
     if (msg != ""){
-        alert(msg);
         clearMsg();
     }
 
@@ -99,23 +98,55 @@
 
         } );
     }; 
-  
+    var retVal;
     var query = '{{request.session.query}}';
-    alert(query);
     if (query == "0"){
-        alert("here");
+         
+        retVal = prompt("From 1-10, Parking????? : ", "");
+        getLocation();
 
-        var txt;
-        if (confirm("Press a button!") == true) {
-            txt = "You pressed OK!";
-        } else {
-            txt = "You pressed Cancel!";
-        }
-
+        
     }
 
-</script>
 
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition);
+        } else { 
+            x.innerHTML = "Geolocation is not supported by this browser.";
+         
+        }
+    }
+
+    var user_lat; 
+    var user_lng;
+
+    function showPosition(position) {
+        user_lat = position.coords.latitude;
+        user_lng = position.coords.longitude;
+        $.ajax({
+            type: "POST",
+            url:"/user_query/",
+            data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'ret':retVal, 'user_lat':user_lat, 'user_lng':user_lng }, 
+
+
+            async: true,
+            success : function(data) {
+                query = "1";
+            },
+
+
+        } );
+    }
+
+
+
+
+
+
+
+
+      </script>
 
    
 </body>

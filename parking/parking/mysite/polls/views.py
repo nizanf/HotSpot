@@ -305,7 +305,7 @@ def login_user(request):
 		login(request, user)
 		
 	  	request.session['login_failures'] = 0
-	  	request.session['query'] = 0
+	  	request.session['query'] = "0"
 	  	request.session['last_failure'] = None
 		return render(request, 'polls/is_login.html', {"is_login":"true"})
 	
@@ -516,6 +516,45 @@ def clear_msg(request):
         request.session['msg'] = "" 
         print(request.session['msg'])
         return HttpResponse("cleared message")
+
+
+
+def user_query(request):
+	request.session['query'] = "1"
+
+	if request.is_ajax() and request.method=='POST':
+   		rating = request.POST.get("ret")
+   		try:
+   			rating_int = int(rating) 
+   			if (rating_int<1 or rating_int > 10):
+   				return HttpResponse("invalid rating")
+			else:
+				rating = float(rating_int)/10
+		except:
+			return HttpResponse("invalid rating")
+
+
+		user = User.object.get(pk = request.user.pk)
+
+		user.profile.points += 1
+
+		user.save()
+
+		print(rating)
+
+		parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+   		user_lat = request.POST.get("user_lat")
+   		user_lng = request.POST.get("user_lng")
+   		print(user_lng)
+   		print(user_lat)
+   		now = datetime.datetime.now()
+   		stat = Statistics( lat = user_lat,lng= user_lng, hour = int(now.hour),rating =rating, date=parking_time)			
+		calculate_actual_rating(stat)
+
+
+        return HttpResponse("statistics created")
+
 
 
 def update_user_spots_status(user_id):
@@ -1066,8 +1105,11 @@ update rank for new statistics object: spot
 '''
 def calculate_actual_rating(spot_stat):
 
-	spot_rating = spot_stat.rating
-	stat_rating = ((1-OLD_RANK_WEIGHT) * spot_rating) + (OLD_RANK_WEIGHT * calculate_environment_average(spot_stat))
+	spot_rating = float(spot_stat.rating)
+	print(calculate_environment_average(spot_stat))
+	print(type(calculate_environment_average(spot_stat)))
+
+	stat_rating = ((1-OLD_RANK_WEIGHT) * spot_rating) + (OLD_RANK_WEIGHT * float(calculate_environment_average(spot_stat)))
 	spot_stat.rating = stat_rating
 	spot_stat.save()
 
