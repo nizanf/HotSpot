@@ -81,20 +81,45 @@ def call_heatmap(request):
 	print ("\n\n\npoints = "+str(points)+"\n\n\n")
 	return render(request, 'polls/heatmap.html', {'points':points})
 
+def checkIfActivityValid(request):
+
+	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
+	max_pk = 0
+	last_activity = None
+	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
+	
+	all_purchase = list(sell_purchase)  +list(buy_purchase)
+
+	for purchase in all_purchase:
+		if ("Binyamin mi-Tudela St 1" in purchase.parking_address):
+			print(" Binyamin pk = "+str(purchase.pk))
+		if ("Dr Haim Brody St 12" in purchase.parking_address):
+			print(" Dr Haim pk = "+str(purchase.pk))
+
+		if (purchase.pk > max_pk):
+			max_pk = purchase.pk
+			last_activity = purchase
+
+	if last_activity.status == ParkingStatus.AVAILABLE or last_activity.status == ParkingStatus.IN_PROCESS:
+		return True
+	return False
+	
+
 def call_last_activity(request):
 
 	sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
 	max_pk = 0
 	last_activity = None
 	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
+	
+	all_purchase = list(sell_purchase)  +list(buy_purchase)
 
-	for purchase in sell_purchase:
-		if (purchase.pk > max_pk):
-			max_pk = purchase.pk
-			last_activity = purchase
+	for purchase in all_purchase:
+		if ("Binyamin mi-Tudela St 1" in purchase.parking_address):
+			print(" Binyamin pk = "+str(purchase.pk))
+		if ("Dr Haim Brody St 12" in purchase.parking_address):
+			print(" Dr Haim pk = "+str(purchase.pk))
 
-
-	for purchase in buy_purchase:
 		if (purchase.pk > max_pk):
 			max_pk = purchase.pk
 			last_activity = purchase
@@ -181,11 +206,14 @@ def call_history(request):
 	buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
 	all_free_spot = FreeSpot.objects.all()
 	
+	update_user_spots_status (request.user.pk)
+
+
 	free_spot = []	
 
 	for spot in all_free_spot:
 
-		reporters_ids_list = json.loads(reporters_ids_json)
+		reporters_ids_list = json.loads(spot.reporters_ids)
 		if request.user.pk in reporters_ids_list:
 			free_spot.append(spot)
 
@@ -202,6 +230,7 @@ def call_history(request):
 
 		if element.class_name() == "Purchase":
 			elemnt_type = "Purchase"
+			status = element.status
 			date_and_time = element.parking_time
 			if (element.seller_id == request.user.pk):
 				if (element.buyer_id == -1):
@@ -219,10 +248,11 @@ def call_history(request):
 		else:
 			elemnt_type = "Report"
 			date_and_time = element.last_report_time
-			buyer_username = "--"
+			buyer_username = "N/A"
 			seller_username = "Me"
+			status = "N/A"
 
-		current_row = [elemnt_type, address, date_and_time, buyer_username, seller_username]
+		current_row = [elemnt_type, address, date_and_time, buyer_username, seller_username, status]
 		history_as_table.append(current_row)
 
 	return render(request, 'polls/history.html', {'history_as_table':history_as_table})
@@ -469,9 +499,13 @@ def clear_msg(request):
         return HttpResponse("cleared message")
 
 
-def update_user_spots_status(given_seller_id):
-	sell_spot_list = Purchase.objects.filter(seller_id = given_seller_id)
-	for spot in sell_spot_list:
+def update_user_spots_status(user_id):
+	sell_spot_list = Purchase.objects.filter(seller_id = user_id)
+	buy_spot_list  = Purchase.objects.filter(buyer_id = user_id)
+
+	all_user_spot = list(sell_spot_list) + list(buy_spot_list)
+
+	for spot in all_user_spot:
 		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PROCESS):
 			
 			if (minutes_elapsed(spot.parking_time) > 0):
@@ -484,6 +518,10 @@ def update_user_spots_status(given_seller_id):
 
 
 def offer_new_parking(request):
+	valid_activity = checkIfActivityValid(request)
+	if (valid_activity == True):
+		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
+		return render(request, 'polls/hotspot.html')
 
 	given_lat = request.POST.get("lat_address")
 	given_lng = request.POST.get("lng_address")
@@ -670,6 +708,11 @@ def refresh_map(request):
 
 def find_new_parking(request):
 	
+	valid_activity = checkIfActivityValid(request)
+	if (valid_activity == True):
+		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
+		return render(request, 'polls/hotspot.html')
+	
 	# Asked address
 	target_address_lat 	= float(request.POST.get("target_address_lat"))
 	target_address_lng 	= float(request.POST.get("target_address_lng"))
@@ -783,14 +826,14 @@ def buyer_cancel_parking(request):
 	chosen_parking 		= Purchase.objects.get(pk=parking_id)
 
 	seller_id			= int(chosen_parking.seller_id)
-	seller_user			= User.objects.get(pk = seller_id)
-	seller.points 	   	+= chosen_parking.cost
+	seller				= User.objects.get(pk = seller_id)
+	seller.profile.points 	   		+= chosen_parking.cost
 	seller.save()
 
 	buyer_user_id  			= int(chosen_parking.buyer_id)
 	buyer_user 			= User.objects.get(pk=buyer_user_id)
 
-	buyer_user.rating *= 0.9
+	buyer_user.profile.rating *= 0.9
 
 	# TODO: Notify seller purchase is cancelled (reason: buyer cancelled) 
 
@@ -865,16 +908,17 @@ def seller_cancel_parking(request):
 
 
 	else : # Someone already bought the parking
-		update_parking_data(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address,-1)
+
+		update_parking_data(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address_lat, 								offered_parking.target_address_lng,-1)
 		#offered_parking.lock.release()
 
-		seller_user.rating *= 0.9
+		seller_user.profile.rating *= 0.9
 		#	update_rating_for_user(buyer_user, "Irrelevent")
 		
-		seller.points 	   = (2*chosen_parking.cost) 		# Fine seller
-		seller.points = max(seller.points,MIN_POINTS)
-		seller.save()
-		buyer_user.points  += (2*chosen_parking.cost) 			# Compensate buyer
+		seller_user.profile.points 	   = (2*offered_parking.cost) 		# Fine seller
+		seller_user.profile.points = max(seller_user.profile.points,MIN_POINTS)
+		seller_user.profile.save()
+		buyer_user.profile.points  += (2*offered_parking.cost) 			# Compensate buyer
 		#TODO: notify buyer
 		buyer_user.save()
 

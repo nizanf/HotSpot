@@ -110,7 +110,6 @@
 
 		var purchase_id = '{{last_activity.7}}';
 
-
 		var pincode_text = document.getElementById('pincode_text');
 		pincode_text.style.visibility = "hidden";
 
@@ -129,6 +128,12 @@
 		}
 
 		var pincode_button = document.getElementById('pincode_button');
+
+		var buyer_name = '{{last_activity.0}}';
+
+		if  (buyer_name =="Me"){ // buyer shoul not enter pincode
+			pincode_button.style.visibility = "hidden";
+		}
 
 		var pincode = document.getElementById('pincode').innerHTML;
 
@@ -155,12 +160,8 @@
 		$.ajax({
 			type: "POST",
 
-			
-
 			url:current_url,
-
-		
-
+	
 			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'purchase_id':purchase_id}, 
 			dataType: 'json',
 			async: false,
