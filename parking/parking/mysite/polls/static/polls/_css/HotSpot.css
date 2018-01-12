@@ -28,16 +28,45 @@ header {
 }
 
 header .logo{
+    width:5%;
     float: left;
     text-align: left;
     margin-left:0;
     padding: 1rem;
 
 }
+header pro{
+    width:30%;
+    height: 50px;
+    float: left;
+    margin-top: 15px;
+    /* margin-left: 6%; */
+}
+header pro st{
+    width: 5%;
+    height: 12px;
+    padding: 10px 0; 
+    float: left;
+    margin-left: 15px;
+    margin-top: 40px;
+   
+}
+
+header pro li{
+    display:inline-block;
+    color: rgb(250, 248, 248);
+    padding:0 10px; 
+    vertical-align:center;
+    text-align: center;
+    border-right: 1px solid #ccc;
+    line-height: 45px;
+}
+
 header nav{
-    width:408px;
+    width:50%;
+    height: 50px;
     float: right;
-   margin-top: 20px;
+   margin-top: 10px;
    /* padding: 1rem; */
 }
 
@@ -57,27 +86,6 @@ header nav ur li{
     text-align: center;
     float: right; 
     border-right: 1px solid #ccc;
-
-}
-
-
-header nav ul{
-    list-style-type: none;
-    padding: 200;
-    margin:auto;
-}
-
-header nav ul li{
-    display:inline-block;
-    color: rgb(250, 248, 248);
-    height:40px;
-    padding:0 20px;
-    line-height:49px;
-    vertical-align:center;
-    text-align: center;
-    float: right; 
-    border-right: 1px solid #ccc;
-
 }
 
 
@@ -95,14 +103,20 @@ header .head_pic{
     margin-top: 20px;
 }
 
-.main h1{
-    float: left;
-    width: 100%;
-    text-align: center;
-    text-decoration-color: white;
-    color: white;
-    
+.main div{
+margin-top: 7%;
+color: #fff;
+font-family: 'Exo', sans-serif;
+font-size: 50px;
+font-weight: 200;
+text-align: center;
 }
+
+.main div span{
+    color: #5379fa !important; 
+}
+
+
 .main .boxes{
     
     float: left;
