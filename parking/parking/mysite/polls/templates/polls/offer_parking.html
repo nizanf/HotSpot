@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+
+
+
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+      
+  	<title>Offer Parking</title>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/hotspot.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">
+
+    <style>
+    .checked {
+        color: orange;
+        z-index: 5;
+    }
+    </style>
+
+
+</head>
+
+<body>
+
+    <div class="all_site">
+        <header>
+            <div class="logo">
+
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+            </div>
+            <nav>
+                <ul>
+
+                    <li>{{request.user.username}}</li>
+                    <li>{{request.user.profile.points}} points</li>
+                    <li>{{request.user.profile.rating}}</li>
+
+
+
+                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
+                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>
+
+                </ul>
+            </nav>
+            <div class="head_pic">
+                    <div class="main">
+                        <div class="box_txt">
+                            <h1>HotSpot Israel</h1>
+                        </div>
+                    </div>
+            </div>
+        </header>
+
+      <div class = "pull-right">
+        <span id="star1" class="fa fa-star"></span>
+        <span id="star2" class="fa fa-star"></span>
+        <span id="star3" class="fa fa-star"></span>
+        <span id="star4" class="fa fa-star"></span>
+        <span id="star5" class="fa fa-star"></span>
+      </div>
+
+
+  <div class="all_site">
+      <header>
+          <div class="logo">
+              <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+          </div>  
+          <nav>
+              <ul>
+                  <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                  <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
+              </ul>
+          </nav>
+          <div class="back"></div>
+      
+          <div id="map"></div>
+            
+          <div id="form">
+                <table>
+
+		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
+			{% csrf_token %}
+
+                    <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
+                    <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
+
+                    <tr><td>Address:</td> <td><input type='text' name ='address'  id='address'/> </td> </tr>
+                    <tr><td>Time:</td> <td><select id='time' name = 'time'> +
+                        <option value=5 SELECTED >5 min</option>
+                        <option value=10>10 min</option>
+                        <option value=15>15 min</option>
+                        <option value=20>20 min</option>
+                        <option value=25>25 min</option>
+                        <option value=30>30 min</option>
+
+                        </select> </td></tr>
+
+                    <tr><td>Parking Size:</td> <td><select id='type' name = 'size'> +
+                        <option value='small'>small</option>
+                        <option value='medium' SELECTED>medium</option>
+                        <option value='Large'>Large</option>
+                        </select> </td></tr>
+                        <tr><td></td><td><input type='submit' value='Submit'></td></tr> </form>
+                </table>
+            </div>
+            <div id="message">Location saved</div>
+            <script>
+                var map;
+                var marker=null;
+                var infowindow;
+                var messagewindow;
+                var geocoder;
+
+                function codeLatLng(latlng, pointWindow, marker) {
+                  geocoder.geocode({
+                    'latLng': latlng
+                  }, function (results, status) {
+                       
+                      if (status == google.maps.GeocoderStatus.OK) {
+                        if (results[0]) {
+      
+                          var address_textbox = document.getElementById('address');
+                          address_textbox.value = results[0]['formatted_address'];
+
+                          var lat_address = document.getElementById('lat_address');
+                          var lng_address = document.getElementById('lng_address');
+
+                          var lat_value = results[0]["geometry"]["location"].lat();
+                          var lng_value = results[0]["geometry"]["location"].lng();
+
+                          lat_address.value = lat_value;
+                          lng_address.value = lng_value;
+
+                      } else {
+                        pointWindow.close();
+                        marker.setMap(null);
+                        alert('Address not found');
+                      }
+                    } else {
+                      pointWindow.close();
+                      marker.setMap(null);
+                      alert('Address not found');
+                    }
+                  });
+                }
+
+
+
+            function initMap(){
+                geocoder = new google.maps.Geocoder();
+                //map options
+                var mapCanvas = document.getElementById("map");
+                var myCenter = new google.maps.LatLng(32.121678, 34.791143);
+                var mapOptions = {center: myCenter, zoom: 10};
+                //new map
+                var map = new google.maps.Map(mapCanvas,mapOptions);
+               
+                infowindow = new google.maps.InfoWindow({
+                    content: document.getElementById('form')
+                });
+            
+                messagewindow = new google.maps.InfoWindow({
+                    content: document.getElementById('message')
+                });
+
+                google.maps.event.addListener(map, 'click', function(event) {
+                    if (marker != null){
+                      var address_textbox = document.getElementById('address');
+                      
+                      if (address_textbox != null) {
+                        address_textbox.value = "";
+                      }
+                      marker.setMap(null); 
+                    }
+                    marker = new google.maps.Marker({
+                        position: event.latLng,
+                        map: map
+                    });
+                    //marker.setMap(map); 
+                    // TODO: Center the map to the marker
+
+                    google.maps.event.addListener(marker, 'click', function() {
+                        
+                        infowindow.open(map, marker);
+                        
+                        pos = marker.getPosition();
+                        result = codeLatLng(pos, infowindow, marker);
+                        var myJSON = JSON.stringify(result);
+
+
+                    });
+                });
+      }
+      function saveData() {
+        var name = escape(document.getElementById('name').value);
+        var address = escape(document.getElementById('address').value);
+        var type = document.getElementById('type').value;
+        var latlng = marker.getPosition();
+        var url = 'phpsqlinfo_addrow.php?name=' + name + '&address=' + address +
+                  '&type=' + type + '&lat=' + latlng.lat() + '&lng=' + latlng.lng();
+
+        downloadUrl(url, function(data, responseCode) {
+
+          if (responseCode == 200 && data.length <= 1) {
+            infowindow.close();
+            messagewindow.open(map, marker);
+          }
+        });
+      }
+
+      function downloadUrl(url, callback) {
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+          if (request.readyState == 4) {
+            request.onreadystatechange = doNothing;
+            callback(request.responseText, request.status);
+          }
+        };
+
+        request.open('GET', url, true);
+        request.send(null);
+      }
+
+      function doNothing () {
+      }
+
+
+
+
+                // //Listen for click on map
+                //     google.maps.event.addListener(map,'click', function(event) {
+                //         //add marker
+                //         addMarker({coords:event.latLng});
+                //     }); 
+                    
+                //     function addMarker(props){
+                //     var marker = new google.maps.Marker({
+                //     position: props.coords,
+                //     map:map
+                //     //TODO if we want change image of marker
+                //     //icon
+                //     });   
+                // }
+         
+            </script>
+            
+
+            
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
+            
+        </header>
+        <footer>
+            find your spot
+        </footer>  
+        <p class="clear"></p>  
+
+    </div> 
+
+<script>
+
+    var user_rating = '{{request.user.profile.rating}}';
+    console.log(user_rating);
+    for(var i=1; i<=user_rating; i++){
+        console.log(i);
+        document.getElementById("star"+i).classList.add('checked');
+
+
+    }
+
+</script>
+
+
+
+</body>
+</html>

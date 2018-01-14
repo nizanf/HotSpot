@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+        {% load static %}
+<head>
+  <title>HeatMap</title>
+
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+
+   <!-- <link rel="stylesheet" type="text/css" href="{% static "polls/_css/hotspot.css" %}"> -->
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">    
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/heatmap.css" %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+
+    <style>
+        
+        .checked {
+        color: orange;
+        z-index: 5;
+    }
+    </style>
+
+</head>
+<body>
+
+    <div class="all_site">
+        <div class="cover">
+        <header>
+            <div class="logo">  
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+            </div>
+            <pro>
+                <li>{{request.user.username}}</li>
+                <li>{{request.user.profile.points}} points</li>
+                <li>{{request.user.profile.rating}}</li> 
+                        
+                <!-- <div class = "st"> -->
+                    <span id="star1" class="fa fa-star"></span>
+                    <span id="star2" class="fa fa-star"></span>
+                    <span id="star3" class="fa fa-star"></span>
+                    <span id="star4" class="fa fa-star"></span>
+                    <span id="star5" class="fa fa-star"></span>
+                <!-- </div> -->
+            </pro>
+            <nav>
+                <ur>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
+                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
+                </ur>
+            </nav>
+           
+            <div class="main">
+                <div class="box_txt">
+                    <div><h1>Hot<span>Spot</span></h1></div> 
+                </div>
+            </div>
+            <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=visualization"></script>
+
+
+        
+        </header>
+            <div id="googleMap"></div>
+        
+        </div>
+        <footer>
+                <p>find your spot</p>
+        </footer> 
+         <p class="clear"></p>
+    
+        
+ 
+
+       <!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initialize&libraries=visualization"></script> -->
+     
+  
+    </div>  
+      
+      
+      <script>
+
+
+var MIN_NO_ACC = 0;
+var MAX_NO_ACC = 1;
+function initialize() {
+  geocoder = new google.maps.Geocoder();
+var mapProp = {
+  center:new google.maps.LatLng(32.109333, 34.855499),
+  zoom:11,
+  mapTypeId:google.maps.MapTypeId.ROADMAP
+};
+var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+var points = JSON.parse('{{points|safe}}');// 1 - red. 0- green.
+//var gradient = [];
+var point;
+alert(points.length);
+var heatMapData = [];
+for(var i = 0;i < points.length;i++){
+    if (parseInt(points[i].color) == 0) {  // Red
+        point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+        heatMapData.push(point);
+      //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
+    }
+}
+codeAddress(heatMapData, map, 0);
+
+var heatMapData = [];
+for(var i = 0;i < points.length;i++){
+  if (parseInt(points[i].color) == 1) {  // Green
+      point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+      heatMapData.push(point);
+      //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
+  }
+}
+codeAddress(heatMapData, map, 1);
+
+
+
+
+
+
+
+//    function codeAddress(latlng, noAccidents) {
+//     //var address = document.getElementById("address").value;
+// geocoder.geocode( { 'location': latlng}, function(results, status) {
+//       if (status == google.maps.GeocoderStatus.OK) {
+//         map.setCenter(results[0].geometry.location);
+
+//         var hotSpot = results[0].geometry.location;
+//         console.log(hotSpot + " " + noAccidents);
+
+
+
+function codeAddress(heatMapData, map, rate) {
+
+
+     // var color =[
+     //      "#ff0000",
+     //      "#00ff00"
+     //  ];
+
+      var heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData,
+        radius: 30,
+        dissapating: false
+      });
+        
+      // var rate = color;
+      // console.log("rate = "+rate);
+      // var gradient = [
+      //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 0)',
+      //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 1)'];
+
+
+      //var gradient = ['rgba(0,255,255,0)']
+
+
+
+      //heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
+
+      //heatmap.set('gradient', gradient);
+
+       //var rate = 0;
+      console.log(rate);
+      var gradient = [
+          'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 0)',
+          'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 1)'];
+      heatmap.set('gradient', gradient);
+      heatmap.setMap(map);
+
+    } 
+
+}
+
+
+
+
+google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+      <script type="text/javascript">
+
+
+        var user_rating = '{{request.user.profile.rating}}';
+        console.log(user_rating);
+        for(var i=1; i<=user_rating; i++){
+            console.log(i);
+            document.getElementById("star"+i).classList.add('checked');
+
+
+        }
+        </script>
+
+
+
+</body>
+</html>

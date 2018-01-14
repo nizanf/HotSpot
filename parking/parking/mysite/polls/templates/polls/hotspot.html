@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+	{% load static %}
+    	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">
+    	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/hotspot.css" %}">
+
+<head>
+        <title>HotSpot</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+     
+    <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+    .checked {
+        color: orange;
+        z-index: 5;
+    }
+    </style>
+
+
+</head>
+
+<body>
+
+    <div class="all_site">
+        <header>
+            <div class="logo">
+
+                <img src="{% static "_images/cars.jpg" %}" height="49"/>          
+            </div>
+                <pro>
+                    <li>{{request.user.username}}</li>
+                    <li>{{request.user.profile.points}} points</li>
+                    <li>{{request.user.profile.rating}}</li>
+                
+                    <!-- <div class = "st"> -->
+                        <span id="star1" class="fa fa-star"></span>
+                        <span id="star2" class="fa fa-star"></span>
+                        <span id="star3" class="fa fa-star"></span>
+                        <span id="star4" class="fa fa-star"></span>
+                        <span id="star5" class="fa fa-star"></span>
+                    <!-- </div> -->
+                </pro>
+                <nav>
+                <ur>
+                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
+                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
+                </ur>
+            </nav>
+            <div class="head_pic">
+                    <div class="main">
+                        <div class="box_txt">
+                            <div><h1>Hot<span>Spot</span></h1></div> 
+                        </div>
+                    </div>
+            </div>
+       
+
+        </header>
+
+
+        <div class="main">
+            <div class="boxes">
+                    
+                <div class="box_image">  
+                    <a href="{% url 'polls:call_find' %}">
+                    <img src="{% static "polls/_images/find1.jpg" %}" width="100%" />  
+                    </a>
+                </div>
+                <div class="box"></div>
+                <div class="box_image"> 
+                    <a href="{% url 'polls:call_report' %}">
+                    <img src="{% static "polls/_images/report.jpg" %}" width="100%" />
+                    </a>  
+                </div>
+                <div class="box_image">  
+                    <a href="{% url 'polls:call_offer' %}">
+                    <img src="{% static "polls/_images/offer.jpg" %}" width="100%" />
+                    </a>  
+                </div>
+                <div class="box_image">  
+                    <a href="{% url 'polls:call_heatmap' %}">
+                    <img src="{% static "polls/_images/heatmap.jpg" %}" width="100%" />  
+                    </a>  
+                </div>
+               
+            </div>
+        </div> 
+        <footer>
+                <p>find your spot</p>
+            </footer> 
+            <p class="clear"></p>
+    </div> 
+   
+    
+    
+
+
+    <script type="text/javascript">
+
+
+        var user_rating = '{{request.user.profile.rating}}';
+        console.log(user_rating);
+        for(var i=1; i<=user_rating; i++){
+            console.log(i);
+            document.getElementById("star"+i).classList.add('checked');
+
+
+        }
+
+
+        var msg = '{{ request.session.msg }}';
+        if (msg != ""){
+            clearMsg();
+        }
+
+        function clearMsg() {
+
+            $.ajax({
+                type: "POST",
+                url:"/clear_msg/",
+                data: { 'csrfmiddlewaretoken': '{{csrf_token}}' }, 
+
+            } );
+        }; 
+        var retVal;
+        var query = '{{request.session.query}}';
+        if (query == "0"){
+            
+            retVal = prompt("From 1-10, Parking????? : ", "");
+			if ( isNaN(retVal) || 10 < retVal || retVal <=  0 ){
+				retVal = prompt(retVal + " Not a number, From 1-10, please enter a number from 1-10", "");
+			}
+            getLocation();
+
+            
+        }
+
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else { 
+                x.innerHTML = "Geolocation is not supported by this browser.";
+            
+            }
+        }
+
+        var user_lat; 
+        var user_lng;
+
+        function showPosition(position) {
+            user_lat = position.coords.latitude;
+            user_lng = position.coords.longitude;
+            $.ajax({
+                type: "POST",
+                url:"/user_query/",
+                data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'ret':retVal, 'user_lat':user_lat, 'user_lng':user_lng }, 
+
+
+                async: true,
+                success : function(data) {
+                    query = "1";
+                },
+
+
+            } );
+        }
+
+
+
+    </script>
+   
+</body>
+
+</html>
