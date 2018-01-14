@@ -9,12 +9,6 @@ body {
     height: 100%;
 }
 
-header {
-    height: 60%;
-    float: left;
-    width:100%;
-    background:#070000;
-}
 
 header .logo{
     width:auto;
@@ -36,13 +30,6 @@ header pro{
     color: #fff;
 }
 
- header pro .st{
-    width: 40%;
-    height: 12px;
-    /* padding: 10px 0;  */
-    float: center;
-    margin-left: 7%;
-} 
 
 header pro li{
     display:inline-block;
@@ -82,6 +69,10 @@ header nav ur li{
     float: right; 
     border-right: 1px solid #ccc;
 }
+/* 
+.main .box_txt span{
+    color: #af0202 !important; 
+} */
 
  
 footer{
@@ -109,4 +100,3 @@ p.clear{
     padding: 0;
 
 }
-
