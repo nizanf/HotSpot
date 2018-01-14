@@ -138,6 +138,9 @@
         if (query == "0"){
             
             retVal = prompt("From 1-10, Parking????? : ", "");
+			if ( isNaN(retVal) || 10 < retVal || retVal =< 0 ){
+				retVal = prompt(retVal + " Not a number, From 1-10, please enter a number from 1-10", "");
+			}
             getLocation();
 
             
