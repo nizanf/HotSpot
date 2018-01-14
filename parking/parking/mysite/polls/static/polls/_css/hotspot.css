@@ -1,31 +1,22 @@
 
-/* 
-img{
-    float:left;
+/* img{
+    float:center;
 } */
 
 .all_site{
     position: absolute;
+    /* widows: 1024px; */
     width: 100%;
     height: 100%;
-       background-color:rgb(2, 2, 2);
+    background-color:rgb(2, 2, 2);
     margin: auto;
-
 }
-.cover{
-    position: relative;
+
+header .head_pic{
     width: 100%;
-    height: 90%;
+    height: 100%;
     background-image:url("../_images/busy_street2.jpg");
-    background-size: cover;
-
-}
-
-header {
-    height: 8%;
     float: left;
-    width:100%;
-    background:#070000;
 }
 
 .main{
@@ -35,12 +26,12 @@ header {
     margin-top: 0px;
 }
 
-
 .main .box_txt{
-margin-top: 0%;
+margin-top: 7%;
 color: #fff;
 font-family: 'Exo', sans-serif;
-font-size: 40px;
+font-size: 50px;
+/* font-weight: 100px; */
 text-align: center;
 -webkit-text-stroke-width: 1.5px;
 -webkit-text-stroke-color: black;
@@ -52,22 +43,49 @@ text-align: center;
 }
 
 
-
- #googleMap{
-    width:55%;
-    height: 60%;
-    margin-left: 23%;
-    margin-top: 10%;
-    margin-bottom: 0%;
-    margin-right: 23%;
+.main .boxes{
+    /* display:inline-block; */
+    position: relative;
+    margin-top: 3%;
     float: left;
-    padding: 5px;
-    align-items: center;
-}
-.map_canvas { 
-
-    height: 100% 
+    width: 100%;
+    height:40%; 
+    background-color: rgb(236, 227, 227);
 }
 
 
+
+.main .boxes .box_image{
+    width: 20%;
+    float: left;
+    margin-top: 0%;
+    margin-left: 4%;
+}
+
+
+/* .main .boxes .box .box_txt{
+    float: left;
+    width: 50%;
+    text-align: center;
+    height: 50%;
+    margin-bottom: 7px solid #ccc;
+    margin-top: 0%;
+ 
+} 
+*/
+
+/* .main .boxes .box .box_image li{
+    display:inline-block;
+    color: rgb(153, 57, 57);
+   -moz-text-size-adjust: inherit;
+   font-family: 'Exo', sans-serif;
+   font-size: 20px;
+    padding:0px;
+    line-height:49px;
+    vertical-align:center;
+    text-align: left;
+    float: left; 
+    margin-left: 46%;
+    border-right: 1px solid #ccc;
+} */
 
