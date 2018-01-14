@@ -71,7 +71,7 @@
 
 	<div class="all_site">
 	
-	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/History.css" %}">
+	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/history.css" %}">
     
      
     <div class="body">
@@ -226,6 +226,8 @@
 				var report_button = document.getElementById('report_button');
 				report_button.style.visibility = "hidden";
 
+
+
 			},
 			error : function(data) {
 				alert("report failed");
@@ -303,10 +305,14 @@
 					alert("Pincode correct!");
 
 					document.getElementById('status').innerHTML = "done";
+					console.log("danny" + '{{last_activity}}');
+					document.getElementById('pincode').innerHTML = pincode_text;
 
 
 					var cancle_button = document.getElementById('cancel_button');
 					cancle_button.style.visibility = "hidden";
+
+
 
 			
 
