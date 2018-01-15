@@ -352,8 +352,6 @@ def update_rating_and_points(user, status, purchase_id):
 		else: # user is the seller, should be compansated
 			pass
 
-
-
 	# make sure didnt exeeded MAX_RATING, MAX_POINTS
 	user.profile.rating = min(user.profile.rating, MAX_RATING)
 	user.profile.points = min(user.profile.points, MAX_POINTS)
@@ -471,7 +469,7 @@ def call_last_activity(request):
 
 		return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
 		
-	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status != ParkingStatus.DONE and last_activity.status != ParkingStatus.CANCELED):
+	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status == ParkingStatus.AVAILABLE):
 		last_activity.status = ParkingStatus.EXPIRED
 		last_activity.save()
 
@@ -776,7 +774,6 @@ def user_query(request):
 
 
         return HttpResponse("statistics created")
-
 
 
 def offer_new_parking(request):
