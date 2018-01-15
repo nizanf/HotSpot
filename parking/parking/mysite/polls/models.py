@@ -60,7 +60,7 @@ class Purchase(models.Model):
 	lock 			= threading.Lock()
 	cond 			= threading.Condition(threading.Lock())
 	pin_code		= models.CharField(max_length=2000, default="-1")
-	attempt_failure = 0
+	attempt_failure = models.IntegerField(default=0)
 
 	parking_actual_rank = models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
 

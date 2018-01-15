@@ -27,7 +27,7 @@ TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
 THRESHOLD_RATING_TO_FREE_SPOT = -1
 THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000 # TODO: Recover to 5
-
+THRESHOLD_FAILURES_ATTEMPTS = 3
 FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
 FREE_PARKING_POINTS_REWARD = 2
@@ -283,7 +283,7 @@ def update_user_spots_status(user_id):
 	all_user_spot = getAllUserActivities(user_id)
 
 	for spot in all_user_spot:
-		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PROCESS):
+		if (spot.status == ParkingStatus.AVAILABLE):# or spot.status == ParkingStatus.IN_PROCESS):
 			
 			if (minutes_elapsed(spot.parking_time) > 0):
 				
@@ -532,7 +532,7 @@ def aut_pincode(request):
 		data = {'msg': "Pincode correct!"}
 
 	else:
-
+		print "attemps: ", purchase.attempt_failure
 		purchase.attempt_failure += 1
 		purchase.save()
 
