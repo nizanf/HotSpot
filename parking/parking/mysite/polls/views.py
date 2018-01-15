@@ -49,11 +49,13 @@ HOURS_IN_DAY = 24
 DAYS_IN_WEEK = 7
 HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
 
-MINUTES_IN_WEEK = 1 #MINUTES_IN_HOUR*7*24
+MINUTES_IN_WEEK = MINUTES_IN_HOUR*7*24
 
 RED = 0		# Busy spot
 GREEN = 1 	# Available spot
 
+ALLOWED_TIME_TO_REPORT = 15 
+ALLOWED_DISTANCE_TO_REPORT = 200
 
 DIST_HIGH_BOUND_RATE_2 = 1000
 DIST_HIGH_BOUND_RATE_3 = 500
@@ -67,6 +69,8 @@ class ParkingStatus:
 	CANCELED = 'canceled'
 	IN_PROCESS = 'in process'
 	AVAILABLE = 'available'
+	ABORT = 'abort'
+	REPORTED = 'reported'
 
 
 class DealStatus:
@@ -323,7 +327,7 @@ def update_rating_and_points(user, status, purchase_id):
 		#user is the seller, should be fined for the cancellation
 		if (user.pk == purchase.seller_id):
 			user.profile.points -= purchase.cost	
-			user.profile.rank *= CANCEL_PARKING_RATING_FINE	
+			user.profile.rating *= CANCEL_PARKING_RATING_FINE	
 
 		else: # user is the buyer, should be compansated
 			# return money paid + transfer the sellers fine
@@ -334,7 +338,7 @@ def update_rating_and_points(user, status, purchase_id):
 		#user is the buyer, should be fined for the cancellation
 		if (user.pk == purchase.buyer_id):
 			#point were already taken 
-			user.profile.rank *= CANCEL_PARKING_RATING_FINE	
+			user.profile.rating *= CANCEL_PARKING_RATING_FINE	
 
 		else: # user is the seller, should be compansated
 			user.profile.points += purchase.cost	
@@ -540,7 +544,11 @@ def aut_pincode(request):
 			data = {'msg': "Pincode incorrect!"}
 			
 		else:
+
+			purchase.status = ParkingStatus.ABORT
+			purchase.save()
 			update_rating_and_points(buyer, DealStatus.ABORT, purchase_id)
+			update_rating_and_points(seller, DealStatus.ABORT, purchase_id)
 			data = {'msg': "Too many incorrect attempts - sayonara"}
 			
 	
@@ -783,7 +791,9 @@ def offer_new_parking(request):
 
 	#make sure user doesnt have incomplete transactions  
 	valid_activity = checkIfActivityValid(request)
+	print("valid activity = "+ str(valid_activity))
 	if (valid_activity == True):
+		print("here!!!")
 		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
 		return render(request, 'polls/hotspot.html')
 
@@ -1086,40 +1096,84 @@ def update_purchase_data(purchase, buyer_id, status,rate,target_address_lat, tar
 	purchase.save()
 
 
-def seller_report_parking(request):
+def parking_complaint(request):
 
 
 	purchase_id			= request.POST.get("purchase_id")
-	offered_parking 		= Purchase.objects.get(pk=purchase_id)
+	purchase			= Purchase.objects.get(pk=purchase_id)
 
-	seller_id			= int(offered_parking.seller_id)
-	seller_user			= User.objects.get(pk = seller_id)
+	user_current_lat	= 32.0852999  #float(request.POST.get("lat"))
+	user_current_lng	= 34.7817676  #float(request.POST.get("lng"))
 
-	buyer_id 			= int(offered_parking.buyer_id)
+	print("user_current_lat = "+str(user_current_lat))
+	print("parking_lat = "+str(float(purchase.target_address_lat)))
+
+	print("user_current_lng = "+str(user_current_lng))
+	print("parking_lng = "+str(float(purchase.target_address_lng)))
 
 
-	# TODO
+
+	#report_time 		= datetime.datetime.now()
+	purchase_time 		= purchase.parking_time
+	
+	diff = minutes_elapsed(purchase_time)
 
 
-	data = {'msg': "parking reported"}
+	seller_id			= int(purchase.seller_id)
+	seller			= User.objects.get(pk = seller_id)
+	
+	buyer_id 			= int(purchase.buyer_id)
+	buyer = User.objects.get(pk = buyer_id)
+
+
+	status_to_display =  purchase.status
+
+	if (diff < 0):
+		print("status_to_display = "+status_to_display)
+		data = {'msg': "Can't report on parking before parking exchange due time!", 'status_to_display':status_to_display}
+
+	elif  (diff > ALLOWED_TIME_TO_REPORT):
+
+		purchase.status = ParkingStatus.ABORT
+		purchase.save()
+
+		update_rating_and_points(buyer, DealStatus.ABORT, purchase_id)
+		update_rating_and_points(seller, DealStatus.ABORT, purchase_id)
+
+		status_to_display = ParkingStatus.ABORT
+
+		data = {'msg': "Too much time passed from parking exchange due time!!", 'status_to_display':status_to_display}
+	else:
+		#check if user distance is close enough to report 
+
+		dist_from_parking = calculate_distance(user_current_lat, user_current_lng, float(purchase.target_address_lat), float(purchase.target_address_lng))
+		print("dist_from_parking = "+str(dist_from_parking))
+		print("ALLOWED_DISTANCE_TO_REPORT = "+str(ALLOWED_DISTANCE_TO_REPORT))
+		if (dist_from_parking > ALLOWED_DISTANCE_TO_REPORT):
+			data = {'msg': "Too far from parking address, get closer to report!!", 'status_to_display':status_to_display}
+		else: # close enough and in the time
+				
+			purchase.status = ParkingStatus.REPORTED
+			purchase.save()
+
+			if (int(seller_id) == request.user.pk):
+
+				update_rating_and_points(buyer, DealStatus.BUYERS_FAULT, purchase_id)
+				update_rating_and_points(seller, DealStatus.BUYERS_FAULT, purchase_id)
+
+			else:
+
+				update_rating_and_points(buyer, DealStatus.SELLERS_FAULT, purchase_id)
+				update_rating_and_points(seller, DealStatus.SELLERS_FAULT, purchase_id)
+
+			status_to_display = ParkingStatus.REPORTED
+
+			data = {'msg': "parking reported", 'status_to_display':status_to_display}
+
 	return JsonResponse(data)
 
 
-def buyer_report_parking(request):
 
-
-	purchase_id			= request.POST.get("purchase_id")
-	offered_parking 	= Purchase.objects.get(pk=purchase_id)
-	seller_id			= int(offered_parking.seller_id)
-	seller_user			= User.objects.get(pk = seller_id)
-
-	buyer_id 			= int(offered_parking.buyer_id)
-
-
-	# TODO
-
-	data = {'msg': "parking reported"}
-	return JsonResponse(data)
 
 
 ############################################################HeatMap
@@ -1202,7 +1256,6 @@ def get_statistics_color_classification():
 	now = datetime.datetime.now()	
 	# get all statistics for the current hour from data base
 	all_statistics = Statistics.objects.filter(hour =  int(now.hour) )
-
 	print "Before filter", len(list(all_statistics))
 	last_week_statistics = filter_statistics_last_week(all_statistics)
 	print "After filter", len(last_week_statistics)

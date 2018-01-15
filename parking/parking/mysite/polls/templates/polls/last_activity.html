@@ -164,19 +164,17 @@
 
 		var status = document.getElementById('status').innerHTML;
 
-		if (status == "done" || status == "canceled"){
+		if (status == "done" || status == "canceled" || status == "expired"){
 
 			var cancle_button = document.getElementById('cancel_button');
-			
 			cancle_button.style.visibility = "hidden";
 
-		} else {
-
 			var report_button = document.getElementById('report_button');
-
 			report_button.style.visibility = "hidden";
 
 		}
+
+
 
 		var pincode_button = document.getElementById('pincode_button');
 
@@ -203,36 +201,57 @@
 	function reportPurchase(){
 
 		var purchase_id = '{{last_activity.7}}';
+		var pos;
 
-		if ('{{last_activity.1}}' == "Me"){
-			var current_url  = "/seller_report_parking/"
-		} else {
-			var current_url  = "/buyer_report_parking/"
-		}
+		 if (navigator.geolocation) {
+	        navigator.geolocation.getCurrentPosition(function(position) {
+	          pos = {
+	            lat: position.coords.latitude,
+	            lng: position.coords.longitude
+	          };
 
-		$.ajax({
-			type: "POST",
-
-			url:current_url,
-	
-			data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'purchase_id':purchase_id}, 
-			dataType: 'json',
-			async: false,
-			success : function(data) {
-				alert(data.msg)
-		
-				document.getElementById('status').innerHTML = "reported";
-
-				var report_button = document.getElementById('report_button');
-				report_button.style.visibility = "hidden";
+	       		console.log("pos = "+pos);
+	          	console.log("pos.lat = "+pos.lat);
 
 
+						var current_url  = "/parking_complaint/";
+					
+						alert(pos.lng);
+						$.ajax({
+							type: "POST",
 
-			},
-			error : function(data) {
-				alert("report failed");
-			}			
-		} );
+							url:current_url,
+					
+							data: { 'csrfmiddlewaretoken': '{{csrf_token}}', 'purchase_id':purchase_id, 'lat':pos.lat, 'lng':pos.lng}, 
+							dataType: 'json',
+							async: false,
+							success : function(data) {
+								alert(data.msg)
+						
+								document.getElementById('status').innerHTML = data.status_to_display;
+
+								if (data.status == "reported" || data.status == "abort"){
+									var report_button = document.getElementById('report_button');
+									report_button.style.visibility = "hidden";
+								}
+
+
+							},
+							error : function(data) {
+								alert("report failed");
+							}			
+						} );
+
+
+		      });
+
+		          
+	        } else {
+		        alert("failed to get location");
+		        return;
+	        }
+
+
 	}
 
 
@@ -319,7 +338,7 @@
 
 
 				} else {
-					alert("Pincode incorrect!");
+					alert(data.msg);
 				}
 
 			},

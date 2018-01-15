@@ -37,7 +37,6 @@ urlpatterns = [
     url(r'^seller_cancel_parking/$', views.seller_cancel_parking, name='seller_cancel_parking'),
     url(r'^buyer_cancel_parking/$', views.buyer_cancel_parking, name='buyer_cancel_parking'),
 
-    url(r'^seller_report_parking/$', views.seller_report_parking, name='seller_report_parking'),
-    url(r'^buyer_report_parking/$', views.buyer_report_parking, name='buyer_report_parking'),
+    url(r'^parking_complaint/$', views.parking_complaint, name='parking_complaint'),
 ]
 

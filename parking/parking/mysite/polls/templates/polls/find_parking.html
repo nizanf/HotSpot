@@ -95,9 +95,10 @@
         <tr><td><input name ='parking_time' id='parking_time'/> </td> </tr>
         <tr><td><input name ='seller_name' id='seller_name'/> </td> </tr>
         <tr><td><input name ='seller_rating' id='seller_rating'/> </td> </tr>
+        <tr><td><input name ='parking_cost' id='parking_cost'/> </td> </tr>
 
        
-        <tr><td></td><td><input name ='submit' id='submit' type='submit' value='Submit'></td></tr> 
+        <tr><td></td><td><input name ='submit' id='submit' type='submit' value='Choose'></td></tr> 
         </table>
       </form>
     
@@ -345,17 +346,21 @@
       parking_time = parking.fields.parking_time;
       seller_name = parking.fields.seller_name;
       seller_rating = parking.fields.seller_rating;
+      parking_cost = parking.fields.cost;
 
       document.getElementById('parking_address').value = "Address: "+parking_address;
       document.getElementById('parking_time').value = "Time: "+parking_time;
       document.getElementById('seller_name').value = "Seller Name: "+seller_name;
       document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
+      document.getElementById('parking_cost').value = "Cost: "+parking_cost;
+
 
       if (parking_type == "FreeSpot") {
         document.getElementById('parking_time').style.visibility = "hidden";
         document.getElementById('seller_name').style.visibility = "hidden";
         document.getElementById('seller_rating').style.visibility = "hidden";
         document.getElementById('parking_address').style.visibility = "visible";
+        document.getElementById('parking_cost').style.visibility = "hidden";
         document.getElementById('submit').style.visibility = "hidden";
 
 
@@ -364,6 +369,7 @@
         document.getElementById('parking_time').style.visibility = "visible";
         document.getElementById('seller_name').style.visibility = "visible";
         document.getElementById('seller_rating').style.visibility = "visible";
+        document.getElementById('parking_cost').style.visibility = "visible";
         document.getElementById('submit').style.visibility = "visible";
 
 

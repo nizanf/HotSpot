@@ -101,6 +101,7 @@ alert(points.length);
 var heatMapData = [];
 for(var i = 0;i < points.length;i++){
     if (parseInt(points[i].color) == 0) {  // Red
+        console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
         point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
         heatMapData.push(point);
       //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
@@ -111,6 +112,9 @@ codeAddress(heatMapData, map, 0);
 var heatMapData = [];
 for(var i = 0;i < points.length;i++){
   if (parseInt(points[i].color) == 1) {  // Green
+
+      console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
+
       point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
       heatMapData.push(point);
       //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
