@@ -63,8 +63,10 @@
 
         
         </header>
+		<div class="points"><input type="checkbox" name="points_demo" id ="points_demo" value="points_demo"><b>show points on map</b><br>
+	
             <div id="googleMap"></div>
-        
+        	</div>
         </div>
         <footer>
                 <p>find your spot</p>
@@ -94,8 +96,61 @@ var mapProp = {
 };
 var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
+var locations = [[31.13822325336446, 34.86133204910074], [31.062814208405136, 34.94778095150468], [31.325632224530143, 34.84627617527801], [31.44028827478037, 34.929179499927805], [31.793122065089744, 34.98084716362026], [30.158056639323313, 34.856595952714464], [30.51896200012298, 34.98783365345225], [31.206333977315197, 34.88081499034915], [32.6161066026659, 34.93532608834002], [31.22981425367125, 34.95617481841885], [31.62864535779857, 34.92991661758491], [30.74949206047007, 34.96937824733826], [31.043678839056668, 34.78924584493507], [30.570176107233383, 34.93130400757979], [32.35921883213679, 34.92820141546168], [31.356768032844744, 34.84460282762466], [32.22728065153748, 34.901396786492846], [31.484798642268665, 34.969242514361795], [30.26627684042164, 34.91571885971323], [31.661197649229063, 34.93165530920203], [30.38563643132828, 34.827007177214966], [31.89116720915396, 34.94192221125768], [32.32521114059868, 34.8935029639616], [30.40674573127997, 34.793002278013205], [32.66888129909215, 34.97736249319043], [31.26688267856102, 34.96068699681341], [32.39767513659259, 34.99853528983903], [31.333541888150272, 34.94284212574287], [30.26366965768789, 34.83926705391881], [30.409144693371793, 34.84750591674883], [31.980338931766223, 34.98245916312034], [30.721310148414467, 34.95414360334184], [31.38161452733851, 34.78927223673653], [30.836379659982246, 34.88461499049392], [31.13915862032034, 34.89892835480372], [31.343441786382524, 34.96935698135024], [31.195621437496918, 34.876172322506655], [31.62693091236449, 34.86318403850759], [32.21763030435759, 34.982316997898046], [32.30433296280214, 34.859256182470695], [31.611811631853243, 34.88085673656587], [31.165436541993465, 34.92455781687571], [30.42800211424729, 34.97484910177374], [31.99357937785716, 34.9372131876989], [31.973892708123103, 34.810668115480226], [31.322998313006863, 34.981788856987414], [31.210223100846704, 34.890915241393266], [30.96707355550645, 34.812031938063825], [30.780974011286517, 34.80606890527712], [30.18663598162859, 34.83750150213316], [31.768777096122566, 34.88322985414713], [31.551907080041712, 34.867591592741796], [32.050620206012844, 34.88974656596888], [31.58902459901905, 34.84065377088725], [31.575714621855596, 34.9758893937704], [31.70529584051173, 34.79912366072644], [31.598716616406808, 34.99875084986305], [30.98865968131111, 34.830449345294625], [31.964678470441335, 34.9636118039492], [31.955483478311788, 34.99496007667197], [31.57407741871604, 34.814907489268585], [31.223699866995098, 34.87700013438172], [32.519474325161674, 34.9173022442885], [30.545955176014274, 34.79918912186429], [30.98435828589551, 34.97282342168315], [31.248383515055668, 34.95579279207926], [30.410931706716326, 34.94889524682681], [31.667823809804187, 34.936691897451205], [32.592736416704454, 34.93700227924764], [31.722347835567835, 34.80948622773306], [32.30431926981625, 34.89254464970107], [31.192853239144934, 34.862975850012845], [32.319712018853586, 34.88741611236657], [30.220426493350526, 34.99477403181848], [31.282540646822678, 34.93891899890659], [31.285576202259826, 34.83839885558053], [32.103780346317876, 34.86745965239649], [30.8328416430131, 34.88514751094874], [30.231797192105834, 34.840757350800146], [32.38314491307992, 34.92174242006127], [30.748369167219447, 34.97929291678072], [31.89086156178297, 34.92755842137514], [32.20005412221652, 34.98547265122644], [30.768832751132436, 34.861005176582694], [31.303804824928044, 34.81909474392525], [32.580965220069935, 34.98801352089755], [31.591760649419673, 34.918841666947884]];
+
+
+var myVar = setInterval(function(){ choose_points() }, 2000); //run every 10 seconds
+
+var is_show;
+var pointsOnMap = [];
+function choose_points(){
+	is_show = [];
+	for (var i=0; i< locations.length; i++){
+		is_show.push(Math.floor((Math.random() * 2)));
+	}
+	show_points();
+}
+
+
+              var imageFree ={ 
+                url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
+                    scaledSize: new google.maps.Size(30, 50), // scaled size
+                    origin: new google.maps.Point(0,0), // origin
+                    anchor: new google.maps.Point(0, 0) // anchor
+
+                  }
+
+
+function show_points(){
+	console.log("here!");
+	setMapOnAll(null);
+	pointsOnMap = [];
+	
+	if (document.getElementById("points_demo").checked == true){
+
+		for (var point_index = 0; point_index<locations.length; point_index++){
+			if (is_show[point_index] == 1){
+   				marker = new google.maps.Marker({
+  	      			position: new google.maps.LatLng(locations[point_index][0], locations[point_index][1]),
+  	      			map: map,
+				icon: imageFree
+
+				});
+				pointsOnMap.push(marker);
+			}	
+		}
+	}
+}
+
+function setMapOnAll(map) {
+ 	for (var i = 0; i < pointsOnMap.length; i++) {
+          	pointsOnMap[i].setMap(map);
+        }
+}
+
+
 var points = JSON.parse('{{points|safe}}');// 1 - red. 0- green.
-//var gradient = [];
+
 var point;
 alert(points.length);
 var heatMapData = [];
@@ -104,48 +159,27 @@ for(var i = 0;i < points.length;i++){
         console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
         point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
         heatMapData.push(point);
-      //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
+
     }
 }
 codeAddress(heatMapData, map, 0);
+	
+	var heatMapData = [];
+	for(var i = 0;i < points.length;i++){
+		if (parseInt(points[i].color) == 1) {  // Green
 
-var heatMapData = [];
-for(var i = 0;i < points.length;i++){
-  if (parseInt(points[i].color) == 1) {  // Green
+      		console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
 
-      console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
-
-      point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
-      heatMapData.push(point);
+      		point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+      		heatMapData.push(point);
       //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
-  }
+  	}
 }
 codeAddress(heatMapData, map, 1);
 
 
-
-
-
-
-
-//    function codeAddress(latlng, noAccidents) {
-//     //var address = document.getElementById("address").value;
-// geocoder.geocode( { 'location': latlng}, function(results, status) {
-//       if (status == google.maps.GeocoderStatus.OK) {
-//         map.setCenter(results[0].geometry.location);
-
-//         var hotSpot = results[0].geometry.location;
-//         console.log(hotSpot + " " + noAccidents);
-
-
-
 function codeAddress(heatMapData, map, rate) {
-
-
-     // var color =[
-     //      "#ff0000",
-     //      "#00ff00"
-     //  ];
+   
 
       var heatmap = new google.maps.visualization.HeatmapLayer({
         data: heatMapData,
@@ -153,23 +187,7 @@ function codeAddress(heatMapData, map, rate) {
         dissapating: false
       });
         
-      // var rate = color;
-      // console.log("rate = "+rate);
-      // var gradient = [
-      //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 0)',
-      //      'rgba('+Math.round(255*rate)+', '+Math.round(255*(1-rate))+', 0, 1)'];
-
-
-      //var gradient = ['rgba(0,255,255,0)']
-
-
-
-      //heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
-
-      //heatmap.set('gradient', gradient);
-
-       //var rate = 0;
-      console.log(rate);
+  
       var gradient = [
           'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 0)',
           'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 1)'];
@@ -178,12 +196,14 @@ function codeAddress(heatMapData, map, rate) {
 
     } 
 
+
+
+
 }
 
 
-
-
 google.maps.event.addDomListener(window, 'load', initialize);
+
     </script>
       <script type="text/javascript">
 
