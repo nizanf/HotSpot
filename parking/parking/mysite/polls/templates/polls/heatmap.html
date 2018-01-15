@@ -63,10 +63,10 @@
 
         
         </header>
-		<div class="points"><input type="checkbox" name="points_demo" id ="points_demo" value="points_demo"><b>show points on map</b><br>
+		<input type="checkbox" name="points_demo" id ="points_demo" value="points_demo"><b>show points on map</b><br>
 	
             <div id="googleMap"></div>
-        	</div>
+
         </div>
         <footer>
                 <p>find your spot</p>
@@ -163,19 +163,30 @@ for(var i = 0;i < points.length;i++){
     }
 }
 codeAddress(heatMapData, map, 0);
-	
-	var heatMapData = [];
-	for(var i = 0;i < points.length;i++){
-		if (parseInt(points[i].color) == 1) {  // Green
 
-      		console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
+var heatMapData = [];
+for(var i = 0;i < points.length;i++){
+    if (parseInt(points[i].color) == 1) {  // YELLOW
+        //console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
+        point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
+        heatMapData.push(point);
+
+    }
+}
+codeAddress(heatMapData, map, 1);
+
+	
+var heatMapData = [];
+for(var i = 0;i < points.length;i++){
+	if (parseInt(points[i].color) == 2) {  // Green
+		//console.log(parseFloat(points[i].lat)+", "+parseFloat(points[i].lng));
 
       		point = {location: new google.maps.LatLng(parseFloat(points[i].lat), parseFloat(points[i].lng)), weight: parseInt(points[i].color)};
       		heatMapData.push(point);
       //gradient.push('rgba('+Math.round(255*points[i].color)+', '+Math.round(255*(1-points[i].color))+', 0, 0)')
   	}
 }
-codeAddress(heatMapData, map, 1);
+codeAddress(heatMapData, map, 2);
 
 
 function codeAddress(heatMapData, map, rate) {
@@ -186,11 +197,29 @@ function codeAddress(heatMapData, map, rate) {
         radius: 30,
         dissapating: false
       });
-        
-  
-      var gradient = [
-          'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 0)',
-          'rgba('+Math.round(255*(1-rate))+', '+Math.round(255*rate)+', 0, 1)'];
+
+    	var gradient;
+
+  	if (rate == 0){//RED
+      		gradient = [
+          		'rgba('+Math.round(255)+', '+Math.round(0)+', 0, 0)',
+          		'rgba('+Math.round(255)+', '+Math.round(0)+', 0, 1)'];
+		console.log("in red");
+		
+	} else {
+		if (rate == 1){//YELLOW
+			gradient = [
+          			'rgba('+Math.round(255)+', '+Math.round(255)+', 0, 0)',
+          			'rgba('+Math.round(255)+', '+Math.round(255)+', 0, 1)'];
+
+		} else { // GREEN
+			gradient = [
+          			'rgba('+Math.round(0)+', '+Math.round(255)+', 0, 0)',
+          			'rgba('+Math.round(0)+', '+Math.round(255)+', 0, 1)'];
+
+		}	
+	}
+
       heatmap.set('gradient', gradient);
       heatmap.setMap(map);
 
