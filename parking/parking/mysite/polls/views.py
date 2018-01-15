@@ -42,11 +42,12 @@ MIN_RATING = 0
 MIN_POINTS = 0
 
 PINCODE_LEN = 6
+
 OLD_RANK_WEIGHT = 0.25
-
 YELLOW_THRESHOLD = 0.33
-
 GREEN_THRESHOLD = 0.66
+
+BAN_USER_THRESHOLD = 0.7
 
 NUMBER_OF_DAYS_FOR_STATISTICS = 7
 MINUTES_IN_HOUR = 60
@@ -1166,10 +1167,33 @@ def parking_complaint(request):
 				update_rating_and_points(buyer, DealStatus.BUYERS_FAULT, purchase_id)
 				update_rating_and_points(seller, DealStatus.BUYERS_FAULT, purchase_id)
 
+				buyer.profile.num_reported += 1
+				buyer.save()
+		
+				sell_purchase = Purchase.objects.filter(seller_id = int(buyer_id))
+				buy_purchase = Purchase.objects.filter(buyer_id = int(buyer_id))
+
+
+
+				if (float(buyer.profile.num_reported)/(len(list(sell_purchase))+len(list(buy_purchase)))  > BAN_USER_THRESHOLD):
+					buyer.profile.is_blocked = 1
+					buyer.save()
+
 			else:
 
 				update_rating_and_points(buyer, DealStatus.SELLERS_FAULT, purchase_id)
 				update_rating_and_points(seller, DealStatus.SELLERS_FAULT, purchase_id)
+
+				seller.profile.num_reported += 1
+				seller.save()
+
+				sell_purchase = Purchase.objects.filter(seller_id = int(seller_id))
+				buy_purchase = Purchase.objects.filter(buyer_id = int(seller_id))
+
+				if (float(seller.profile.num_reported)/(len(list(sell_purchase))+len(list(buy_purchase)))  > BAN_USER_THRESHOLD):
+					seller.profile.is_blocked = 1
+					seller.save()
+
 
 			status_to_display = ParkingStatus.REPORTED
 
