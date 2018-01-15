@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 import datetime
-
+import math
 import time
+
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
@@ -319,7 +320,7 @@ def update_rating_and_points(user, status, purchase_id):
 	elif status == DealStatus.DONE:
 		#user is the seller, should get the money for the transaction
 		if (user.pk == purchase.seller_id):
-			user.profile.points += purchase.cost
+			user.profile.points += int(purchase.cost + int(math.floor(user.profile.rating)))
 
 		# in both cases: seller/user
 		if (user.profile.rating == MIN_RATING):
@@ -346,12 +347,12 @@ def update_rating_and_points(user, status, purchase_id):
 			user.profile.rating *= CANCEL_PARKING_RATING_FINE	
 
 		else: # user is the seller, should be compansated
-			user.profile.points += purchase.cost	
+			user.profile.points += int(purchase.cost + int(math.floor(user.profile.rating)))	
 			#dont update rating 	
 
 	elif status == DealStatus.ABORT:
 		'''
-			This case is if the seller is an idiot and tried to failed to enter the pincode 3 times
+			This case is if the seller is an idiot and failed to enter the pincode 3 times
 		'''
 		if (user.pk == purchase.buyer_id):
 			#point were already taken 
