@@ -514,6 +514,9 @@ def aut_pincode(request):
 	buyer_id = purchase.buyer_id
 	buyer = User.objects.get(pk = buyer_id)
 
+	seller_id = int(purchase.seller_id)
+	seller = User.objects.get(pk = seller_id)
+
 	# recived pincode 
 	pincode = request.POST.get("pincode")
 		
@@ -524,8 +527,6 @@ def aut_pincode(request):
 		purchase.save()
 
 		#update sellers rank+points
-		seller_id = int(purchase.seller_id)
-		seller = User.objects.get(pk = seller_id)
 		update_rating_and_points(seller,DealStatus.DONE,purchase_id)
 
 		#TODO: remove 
@@ -550,7 +551,6 @@ def aut_pincode(request):
 			data = {'msg': "Pincode incorrect!"}
 			
 		else:
-
 			purchase.status = ParkingStatus.ABORT
 			purchase.save()
 			update_rating_and_points(buyer, DealStatus.ABORT, purchase_id)
