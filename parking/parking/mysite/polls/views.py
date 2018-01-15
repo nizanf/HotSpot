@@ -500,6 +500,10 @@ def aut_pincode(request):
 	purchase_id = int(request.POST.get("purchase_id"))
 	purchase = Purchase.objects.get(pk = purchase_id)
 
+	# update buyers rank 
+	buyer_id = purchase.buyer_id
+	buyer = User.objects.get(pk = buyer_id)
+
 	# recived pincode 
 	pincode = request.POST.get("pincode")
 		
@@ -521,27 +525,24 @@ def aut_pincode(request):
 		# 	seller.profile.rating = 0.1
 		# seller.save()
 
-		#update buyers rank 
-		buyer_id = purchase.buyer_id
-		buyer = User.objects.get(pk = buyer_id)
+		
 		update_rating_and_points(buyer,DealStatus.DONE,purchase_id)
 
 
 		data = {'msg': "Pincode correct!"}
 
 	else:
-		print "attemps: ", purchase.attempt_failure
 		purchase.attempt_failure += 1
 		purchase.save()
 
 		if (purchase.attempt_failure < THRESHOLD_FAILURES_ATTEMPTS):	
 			# TODO: print authentication failed.. popup screen type again  \ report on buyer
 			data = {'msg': "Pincode incorrect!"}
-
+			
 		else:
 			update_rating_and_points(buyer, DealStatus.ABORT, purchase_id)
 			data = {'msg': "Too many incorrect attempts - sayonara"}
-	
+			
 	
 	return JsonResponse(data)
 		
