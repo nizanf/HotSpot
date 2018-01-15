@@ -659,7 +659,6 @@ def report_free_parking(request):
 	found_valid_parking = False
 
 	if parking_in_street:
-		print("here1")
 
 		for parking in parking_in_street:
 			
@@ -745,6 +744,9 @@ def report_free_parking(request):
 				update_rating_and_points(reporter_user,DealStatus.FREE_REPORTED,-1)
 
 		free_parking.save()
+
+
+	request.session["msg"] = "Free parking reported successfuly"
 	return render(request, 'polls/hotspot.html')
 
 def user_query(request):
@@ -764,18 +766,13 @@ def user_query(request):
 
 		user = User.objects.get(pk = request.user.pk)
 
-		user.profile.points += 1
-
 		user.save()
-
-		print(rating)
 
 		parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
    		user_lat = request.POST.get("user_lat")
    		user_lng = request.POST.get("user_lng")
-   		print(user_lng)
-   		print(user_lat)
+
    		now = datetime.datetime.now()
    		stat = Statistics( lat = user_lat,lng= user_lng, hour = int(now.hour),rating =rating, date=parking_time)			
 		calculate_actual_rating(stat)
@@ -826,7 +823,7 @@ def offer_new_parking(request):
 
 	purchase 			= Purchase(seller_id = given_seller_id, cost=cost_value, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng, pin_code = pincode)
 	purchase.save()
-
+	request.session["msg"] = "Parking offered successfuly. For more details, click on - last activity"
 	return render(request, 'polls/hotspot.html')
 
 
@@ -877,11 +874,6 @@ def update_spots_on_map(request):
 
 def find_new_parking(request):
 
-	# make sure user doesnt have incomplete transactions
-	valid_activity = checkIfActivityValid(request)
-	if (valid_activity == True):
-		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
-		return render(request, 'polls/hotspot.html')
 	
 	# Asked address
 	target_address_lat 	= float(request.POST.get("target_address_lat"))
@@ -906,10 +898,17 @@ def find_new_parking(request):
 	buyer_user_id 		= int(request.user.pk)
 	buyer_user 			= User.objects.get(pk=buyer_user_id)
 
+
 	if (buyer_user_id == seller_id):
 		request.session["msg"] = "Cannot buy your own parking !!!"
 		return render(request, 'polls/hotspot.html')
 
+	# make sure user doesnt have incomplete transactions
+	valid_activity = checkIfActivityValid(request)
+	if (valid_activity == True):
+		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
+		return render(request, 'polls/hotspot.html')
+		
 	# The radius according to the zoom of the user's map
 	radius 				= request.POST.get("radius")
 
