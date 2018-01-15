@@ -42,7 +42,11 @@ MIN_POINTS = 0
 
 PINCODE_LEN = 6
 OLD_RANK_WEIGHT = 0.25
-COLOR_THRESHOLD = 0.5
+
+YELLOW_THRESHOLD = 0.33
+
+GREEN_THRESHOLD = 0.66
+
 NUMBER_OF_DAYS_FOR_STATISTICS = 7
 MINUTES_IN_HOUR = 60
 HOURS_IN_DAY = 24
@@ -52,7 +56,8 @@ HOURS_IN_WEEK = HOURS_IN_DAY * DAYS_IN_WEEK
 MINUTES_IN_WEEK = MINUTES_IN_HOUR*7*24
 
 RED = 0		# Busy spot
-GREEN = 1 	# Available spot
+YELLOW = 1
+GREEN = 2 	# Available spot
 
 ALLOWED_TIME_TO_REPORT = 15 
 ALLOWED_DISTANCE_TO_REPORT = 200
@@ -1264,7 +1269,12 @@ def get_statistics_color_classification():
 	#for each stat in the statistics from last week classify to color red/green
 	for stat in last_week_statistics:
 		curr_rate = stat.rating
-		stat_color = GREEN if curr_rate > COLOR_THRESHOLD else RED # high rating- color in green
+		stat_color = RED 
+		if curr_rate > YELLOW_THRESHOLD:
+			if curr_rate > GREEN_THRESHOLD:
+				stat_color = GREEN	
+			else: 
+				stat_color = YELLOW # high rating- color in green
 
 		stats_to_display.append({'lat':stat.lat, 'lng':stat.lng, 'color': stat_color})
 
