@@ -94,7 +94,7 @@
                     <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
                     <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
 
-                    <tr><td>Address:</td> <td><input type='text' name ='address'  id='address'/> </td> </tr>
+                    <tr><td>Address:</td> <td><input type='text' name ='info_address'  id='info_address'/> </td> </tr>
                     <tr><td>Time:</td> <td><select id='time' name = 'time'> +
                         <option value=5 SELECTED >5 min</option>
                         <option value=10>10 min</option>
@@ -139,10 +139,15 @@
                   }, function (results, status) {
                        
                       if (status == google.maps.GeocoderStatus.OK) {
+                        console.log(results);
                         if (results[0]) {
       
                           var address_textbox = document.getElementById('address');
                           address_textbox.value = results[0]['formatted_address'];
+
+                          var info_address_textbox = document.getElementById('info_address');
+                          info_address_textbox.value = results[0]['formatted_address'];
+
 
                           var lat_address = document.getElementById('lat_address');
                           var lng_address = document.getElementById('lng_address');
@@ -154,29 +159,35 @@
                           lng_address.value = lng_value;
 
                       } else {
+                        if (pointWindow != null) {
+                            pointWindow.close();
+                            marker.setMap(null);
+                            alert('Address not found');
+                        }
+                      }
+                    } else {
+                      if (pointWindow != null) {
                         pointWindow.close();
                         marker.setMap(null);
                         alert('Address not found');
-                      }
-                    } else {
-                      pointWindow.close();
-                      marker.setMap(null);
-                      alert('Address not found');
-                    }
+                        }
+                     }
                   });
                 }
-
-
 
             function initMap(){
                 geocoder = new google.maps.Geocoder();
                 //map options
                 var mapCanvas = document.getElementById("googleMap");
                 var myCenter = new google.maps.LatLng(32.121678, 34.791143);
-                var mapOptions = {center: myCenter, zoom: 10};
+                var mapOptions = {center: myCenter, zoom: 14};
                 //new map
                 var map = new google.maps.Map(mapCanvas,mapOptions);
                
+                document.getElementById('find_parking').addEventListener('click', function() {
+                  geocodeAddress(geocoder, map);
+                });
+
                 infowindow = new google.maps.InfoWindow({
                     content: document.getElementById('form')
                 });
@@ -185,24 +196,78 @@
                     content: document.getElementById('message')
                 });
 
+
+
+                if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(function(position) {
+                        var pos = {
+                          lat: position.coords.latitude,
+                          lng: position.coords.longitude
+                        };
+                        var meimage ={ 
+                          url:'https://furtaev.ru/preview/current_location_map_pointer.png',
+                        scaledSize: new google.maps.Size(50, 50), // scaled size
+                        origin: new google.maps.Point(0,0), // origin
+                        anchor: new google.maps.Point(0, 0) // anchor
+                      }   
+                      
+                      marker = new google.maps.Marker({
+                        position: pos,
+                        map:map,    
+                        //icon: meimage
+                      });
+                      
+                      map.setCenter(pos);
+                      alert("Messssssssssssssssssssssssiii");
+                      result = codeLatLng(pos, null, null);
+                    }, function() {
+                      handleLocationError(true, infowindow, map.getCenter());
+                    });
+
+                } else {
+                    // Browser doesn't support Geolocation
+                    //handleLocationError(false, infowindow, map.getCenter());
+
+                      marker = new google.maps.Marker({
+                      //  position: pos,
+                        map:map,    
+                        //icon: meimage
+                      });
+                }
+
+
                 google.maps.event.addListener(map, 'click', function(event) {
-                    if (marker != null){
+                    alert("gal");
+                    if (marker != null) {
                       var address_textbox = document.getElementById('address');
+                      var info_address_textbox = document.getElementById('info_address')
+                      
                       
                       if (address_textbox != null) {
                         address_textbox.value = "";
+                       }
+
+                      if (info_address_textbox != null) {
+                        info_address_textbox.value = "";
                       }
+
                       marker.setMap(null); 
                     }
                     marker = new google.maps.Marker({
                         position: event.latLng,
                         map: map
                     });
+
+                    map.setCenter(event.latLng);
+
+                    codeLatLng(event.latLng, infowindow ,marker);
                     //marker.setMap(map); 
                     // TODO: Center the map to the marker
+                });
 
-                    google.maps.event.addListener(marker, 'click', function() {
-                        
+                alert("add marker on click");
+                 google.maps.event.addListener(marker, 'click', function() {
+                        alert("nizan");
                         infowindow.open(map, marker);
                         
                         pos = marker.getPosition();
@@ -211,43 +276,84 @@
 
 
                     });
-                });
+              //  });
       }
-      function saveData() {
-        var name = escape(document.getElementById('name').value);
-        var address = escape(document.getElementById('address').value);
-        var type = document.getElementById('type').value;
-        var latlng = marker.getPosition();
-        var url = 'phpsqlinfo_addrow.php?name=' + name + '&address=' + address +
-                  '&type=' + type + '&lat=' + latlng.lat() + '&lng=' + latlng.lng();
 
-        downloadUrl(url, function(data, responseCode) {
+      function geocodeAddress(geocoder, map) {
+       // target_lat = '';
+       // target_lng = '';
 
-          if (responseCode == 200 && data.length <= 1) {
-            infowindow.close();
-            messagewindow.open(map, marker);
+       alert("Or");
+       var address = document.getElementById('address').value;
+       geocoder.geocode({'address': address}, function(results, status) {
+          if (status === 'OK') {
+                var location = results[0].geometry.location;
+                map.setCenter(location);
+
+                marker = new google.maps.Marker({
+                    position: location,
+                    map:map
+                    //TODO if we want change image of marker
+                    //icon
+                    });
+
+
+                infowindow = new google.maps.InfoWindow({
+                    content: document.getElementById('form')
+                });   
+
+                google.maps.event.addListener(marker, 'click', function() {
+                        alert("nizan1");
+                        infowindow.open(map, marker);
+                        
+                        //pos = marker.getPosition();
+                        //result = codeLatLng(pos, infowindow, marker);
+                        //var myJSON = JSON.stringify(result);
+
+
+                 });
+                //});
+
+          } else {
+            alert('Geocode was not successful for the following reason: ' + status);
           }
         });
-      }
+        } // End geocodeAddress
+      // function saveData() {
+      //   var name = escape(document.getElementById('name').value);
+      //   var address = escape(document.getElementById('address').value);
+      //   var type = document.getElementById('type').value;
+      //   var latlng = marker.getPosition();
+      //   var url = 'phpsqlinfo_addrow.php?name=' + name + '&address=' + address +
+      //             '&type=' + type + '&lat=' + latlng.lat() + '&lng=' + latlng.lng();
 
-      function downloadUrl(url, callback) {
-        var request = window.ActiveXObject ?
-            new ActiveXObject('Microsoft.XMLHTTP') :
-            new XMLHttpRequest;
+      //   downloadUrl(url, function(data, responseCode) {
 
-        request.onreadystatechange = function() {
-          if (request.readyState == 4) {
-            request.onreadystatechange = doNothing;
-            callback(request.responseText, request.status);
-          }
-        };
+      //     if (responseCode == 200 && data.length <= 1) {
+      //       infowindow.close();
+      //       messagewindow.open(map, marker);
+      //     }
+      //   });
+      // }
 
-        request.open('GET', url, true);
-        request.send(null);
-      }
+      // function downloadUrl(url, callback) {
+      //   var request = window.ActiveXObject ?
+      //       new ActiveXObject('Microsoft.XMLHTTP') :
+      //       new XMLHttpRequest;
 
-      function doNothing () {
-      }
+      //   request.onreadystatechange = function() {
+      //     if (request.readyState == 4) {
+      //       request.onreadystatechange = doNothing;
+      //       callback(request.responseText, request.status);
+      //     }
+      //   };
+
+      //   request.open('GET', url, true);
+      //   request.send(null);
+      // }
+
+      // function doNothing () {
+      // }
 
 
 
