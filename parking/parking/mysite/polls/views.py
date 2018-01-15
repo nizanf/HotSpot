@@ -254,24 +254,6 @@ def checkIfActivityValid(request):
 	check if user has an active purchase
 	i.e if user has a purchase that hasnt passed its due time return true else return false
 	'''
-	# TODO: Remove
-	# # update the status of all purchases to expired if passed thier due time
-	# update_user_spots_status (request.user.pk)
-	#
-	# # sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
-	# # buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
-	# # all_purchase = list(sell_purchase)  +list(buy_purchase)
-	# all_purchase = getAllUserActivities(request.user.pk)
-	#
-	# max_pk = 0
-	# last_activity = None
-	#
-	# # fine the most recent purchase 
-	# for purchase in all_purchase:
-	# 	if (purchase.pk > max_pk):
-	# 		max_pk = purchase.pk
-	# 		last_activity = purchase
-
 	last_activity = getUserLastActivity(request.user.pk)
 
 	if last_activity == None:
@@ -287,10 +269,6 @@ def update_user_spots_status(user_id):
 	iterate all over purchases  the user participated in and if 
 	passed the parking due time change status to expired 
 	'''
-	# TODO: Remove
-	# sell_spot_list = Purchase.objects.filter(seller_id = user_id)
-	# buy_spot_list  = Purchase.objects.filter(buyer_id = user_id)
-	#all_user_spot = list(sell_spot_list) + list(buy_spot_list)
 	all_user_spot = getAllUserActivities(user_id)
 
 	for spot in all_user_spot:
@@ -374,8 +352,6 @@ def update_rating_and_points(user, status, purchase_id):
 	user.save()
 
 
-#TODO make sure when locking the parking dont need to save the acquiere to the database
-#when to save? is the acquiere recursive?
 def seller_cancel_parking(request):
 
 	purchase_id			= request.POST.get("purchase_id")
@@ -388,27 +364,12 @@ def seller_cancel_parking(request):
 	if (buyer_id != -1):
 		buyer_user 		= User.objects.get(pk=buyer_id)
 	
-	# Lock to edit the object 
-	#if offered_parking.wait_lock(TIMEOUT_LOCK): TODO: what to do with the lock??? 
-
 	if (offered_parking.status != ParkingStatus.AVAILABLE): # if available no harm is done
 
 	 	# Someone already bought the parking
 
 		update_purchase_data(offered_parking, buyer_id, ParkingStatus.CANCELED,-1,offered_parking.target_address_lat, offered_parking.target_address_lng,-1)
-		#TODO : remove 
-		#offered_parking.lock.release()
 
-		# seller_user.profile.rating *= 0.9
-		# #	update_rating_and_points(buyer_user, "Irrelevent")
-		
-		# seller_user.profile.points 	   = (2*offered_parking.cost) 		# Fine seller
-		# seller_user.profile.points = max(seller_user.profile.points,MIN_POINTS)
-		# seller_user.profile.save()
-		# buyer_user.profile.points  += (2*offered_parking.cost) 			# Compensate buyer
-		# #TODO: notify buyer
-		
-		# buyer_user.save()
 
 		update_rating_and_points(seller_user, DealStatus.SELLERS_FAULT, purchase_id)
 		update_rating_and_points(buyer_user, DealStatus.SELLERS_FAULT, purchase_id)
@@ -455,22 +416,6 @@ def buyer_cancel_parking(request):
 def call_last_activity(request):
 
 	update_user_spots_status(request.user.pk)
-	
-	# TODO: Remove
-	# sell_purchase = Purchase.objects.filter(seller_id = request.user.pk)
-	# buy_purchase = Purchase.objects.filter(buyer_id = request.user.pk)
-	# all_purchase = list(sell_purchase)  +list(buy_purchase)
-	#
-	# all_purchase = getAllUserActivities(request.user.pk)
-	#	
-	# max_pk = 0
-	# last_activity = None
-	#
-	# for purchase in all_purchase:
-	#
-	# 	if (purchase.pk > max_pk):
-	# 		max_pk = purchase.pk
-	# 		last_activity = purchase
 
 	last_activity = getUserLastActivity(request.user.pk)
 
@@ -530,14 +475,6 @@ def aut_pincode(request):
 		#update sellers rank+points
 		update_rating_and_points(seller,DealStatus.DONE,purchase_id)
 
-		#TODO: remove 
-		# seller.profile.points += purchase.cost
-		# seller.profile.rating = seller.profile.rating * 1.1
-		# if (seller.profile.rating == 0):
-		# 	seller.profile.rating = 0.1
-		# seller.save()
-
-		
 		update_rating_and_points(buyer,DealStatus.DONE,purchase_id)
 
 
@@ -892,9 +829,6 @@ def find_new_parking(request):
 	# Parking
 	parking_id 			= int(request.POST.get("parking_id"))
 	
-	#TODO: remove 
-	#print parking_id, "hola"
-
 	chosen_parking 		= Purchase.objects.get(pk=parking_id)
 
 	# Seller
@@ -923,30 +857,15 @@ def find_new_parking(request):
 	parking_address_lat = float(chosen_parking.parking_address_lat)
 	parking_address_lng = float(chosen_parking.parking_address_lng)
 
-	# TODO: Remove
-	# Lock to edit the object
-	# if not chosen_parking.wait_lock(TIMEOUT_AVAILABLE_PARKING):
-	# 	chosen_parking.lock.release()
-	# 	# TOOD: render to unavailable parking dude or pop-up and render to parking list
-	# 	return render(request, 'polls/show_available_parkings.html', 
-	# 		{ 'relevant_parkings' : 
-	# 			get_parkings_by_radius(asked_target_address, radius, time.now()) })
-
-
 	# Check buyer has enough points
 	if (buyer_user.profile.points < chosen_parking.cost):
 		request.session["msg"] = "You do not have enough points!!!"
 		return render(request, 'polls/hotspot.html')
 
-	# TODO: Remove
-	## Now- locked !
 
 	# If the parking is not free
 	if (chosen_parking.status != ParkingStatus.AVAILABLE):
-		# TODO: Remove
-		#chosen_parking.lock.release()
 		
-		# TOOD: render to unavailable parking dude or pop-up and render to parking list
 		request.session["msg"] = "Parking already booked"
 		return render(request, 'polls/hotspot.html')
 	
@@ -961,9 +880,6 @@ def find_new_parking(request):
 
 	# Save data to DB
 	update_purchase_data(chosen_parking, buyer_user_id, ParkingStatus.IN_PROCESS, parking_rating ,target_address_lat, target_address_lng, pin_code)
-	
-	# TODO: Remove
-	#chosen_parking.lock.release()
 	
 	# Add purchase to statistics
 	now = datetime.datetime.now()
@@ -1269,10 +1185,6 @@ def calculate_actual_rating(spot_stat):
 	'''
 
 	spot_rating = float(spot_stat.rating)
-	
-	#TODO: remove
-	# print(calculate_environment_average(spot_stat))
-	# print(type(calculate_environment_average(spot_stat)))
 
 	stat_rating = ((1-OLD_RANK_WEIGHT) * spot_rating) + (OLD_RANK_WEIGHT * float(calculate_environment_average(spot_stat)))
 	spot_stat.rating = stat_rating
@@ -1312,9 +1224,6 @@ def filter_statistics_last_week(all_statistics):
 	'''  
 	ret = []
 	for stat in all_statistics:
-		print stat.date
-		#TODO: remove 
-		#print minutes_elapsed(stat.date), "gal" 
 		if (minutes_elapsed(stat.date) < MINUTES_IN_WEEK): # Minutes in week
 			ret.append(stat)
 	return ret
