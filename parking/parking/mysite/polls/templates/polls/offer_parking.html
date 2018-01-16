@@ -216,9 +216,10 @@
                         map:map,    
                         //icon: meimage
                       });
+
+                      addOnClickToMarker();
                       
                       map.setCenter(pos);
-                      alert("Messssssssssssssssssssssssiii");
                       result = codeLatLng(pos, null, null);
                     }, function() {
                       handleLocationError(true, infowindow, map.getCenter());
@@ -233,11 +234,12 @@
                         map:map,    
                         //icon: meimage
                       });
+
+                      addOnClickToMarker();
                 }
 
 
                 google.maps.event.addListener(map, 'click', function(event) {
-                    alert("gal");
                     if (marker != null) {
                       var address_textbox = document.getElementById('address');
                       var info_address_textbox = document.getElementById('info_address')
@@ -257,7 +259,7 @@
                         position: event.latLng,
                         map: map
                     });
-
+                    addOnClickToMarker();
                     map.setCenter(event.latLng);
 
                     codeLatLng(event.latLng, infowindow ,marker);
@@ -265,25 +267,27 @@
                     // TODO: Center the map to the marker
                 });
 
-                alert("add marker on click");
-                 google.maps.event.addListener(marker, 'click', function() {
-                        alert("nizan");
-                        infowindow.open(map, marker);
-                        
-                        pos = marker.getPosition();
-                        result = codeLatLng(pos, infowindow, marker);
-                        var myJSON = JSON.stringify(result);
-
-
-                    });
               //  });
+      }
+
+      function addOnClickToMarker() {
+
+        google.maps.event.addListener(marker, 'click', function() {
+            infowindow.open(map, marker);
+            
+            pos = marker.getPosition();
+            result = codeLatLng(pos, infowindow, marker);
+            var myJSON = JSON.stringify(result);
+
+
+        });
+
       }
 
       function geocodeAddress(geocoder, map) {
        // target_lat = '';
        // target_lng = '';
 
-       alert("Or");
        var address = document.getElementById('address').value;
        geocoder.geocode({'address': address}, function(results, status) {
           if (status === 'OK') {
@@ -303,7 +307,6 @@
                 });   
 
                 google.maps.event.addListener(marker, 'click', function() {
-                        alert("nizan1");
                         infowindow.open(map, marker);
                         
                         //pos = marker.getPosition();
