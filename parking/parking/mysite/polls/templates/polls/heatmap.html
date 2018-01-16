@@ -10,7 +10,8 @@
     <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">    
     <link rel="stylesheet" type="text/css" href="{% static "polls/_css/heatmap.css" %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-      
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
 
@@ -62,14 +63,16 @@
 
         
         </header>
-        <section>
+        
 
-            <div class = "playdemo">
-                <input type="checkbox" value="1" name="" id ="playdemoinput" />
-                <!-- <b>show points on map</b> -->
-                <label for="playdemo"></label>
-            </div>
-        </section>
+
+				  <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="points_demo"><h2 style="color:white;"> Play Demo  </h2>
+                                    <span class="custom-control-indicator"></span>
+                                </label>
+
+
+
             <div id="googleMap"></div>
 
         </div>
@@ -157,7 +160,6 @@ function setMapOnAll(map) {
 var points = JSON.parse('{{points|safe}}');// 1 - red. 0- green.
 
 var point;
-alert(points.length);
 var heatMapData = [];
 for(var i = 0;i < points.length;i++){
     if (parseInt(points[i].color) == 0) {  // Red

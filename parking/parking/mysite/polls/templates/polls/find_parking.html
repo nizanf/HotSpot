@@ -142,14 +142,10 @@
                 radius_textbox.value = 100;
                 return;
               }
-              alert("radius " + radius_value);
 
               var base_zoom = 18;
-              alert("Log: " + Math.log(radius_value) / Math.LN10);
-              alert("parseIntLog: " + Math.round(Math.log(radius_value) / Math.LN10));
               
               var new_zoom = base_zoom - Math.round(Math.log(radius_value) / Math.LN10);
-              alert("New: " + new_zoom);
               map.setZoom(new_zoom);
 
 
@@ -339,14 +335,12 @@
                   }); 
 
                   all_markers.push(new_marker);
-                  alert("gaaaaaa: " + all_markers.length);
             } // End addParkingMarker
             var points = '{{request.user.profile.points}}';
             var parking_price = 10;
 
             function clearMarkersOnMap() {
 
-              alert("Clear markers: " + all_markers.length);
                 for (var i = 0; i < all_markers.length; i++) {
                   all_markers[i].setMap(null);
                 }
@@ -356,7 +350,7 @@
 
             function myFunction() {
               if (points < parking_price) {
-                alert("Sorry dude, you don't have enough points");
+                alert("Sorry, you don't have enough points");
               }
               
             }

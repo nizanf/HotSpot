@@ -69,6 +69,10 @@ DIST_HIGH_BOUND_RATE_3 = 500
 DIST_HIGH_BOUND_RATE_4 = 200
 DIST_HIGH_BOUND_RATE_5 = 100
 
+MIN_PARKING_RATING = 0
+MAX_PARKING_RATING = 1
+
+
 
 class ParkingStatus:
 	DONE = 'done'
@@ -365,6 +369,12 @@ def seller_cancel_parking(request):
 	if (buyer_id != -1):
 		buyer_user 		= User.objects.get(pk=buyer_id)
 	
+
+	print ("111 offered_parking.status  = "+offered_parking.status )
+
+
+
+
 	if (offered_parking.status != ParkingStatus.AVAILABLE): # if available no harm is done
 
 	 	# Someone already bought the parking
@@ -375,9 +385,12 @@ def seller_cancel_parking(request):
 		update_rating_and_points(seller_user, DealStatus.SELLERS_FAULT, purchase_id)
 		update_rating_and_points(buyer_user, DealStatus.SELLERS_FAULT, purchase_id)
 
+
+
+
 	offered_parking.status = ParkingStatus.CANCELED
 	offered_parking.save()
-
+	print("222 offered_parking.status = "+offered_parking.status)
 	data = {'msg': "parking canceled"}
 	return JsonResponse(data)
 
@@ -392,6 +405,13 @@ def buyer_cancel_parking(request):
 
 	buyer_user_id  			= int(chosen_parking.buyer_id)
 	buyer_user 			= User.objects.get(pk=buyer_user_id)
+
+
+	if (chosen_parking.status == ParkingStatus.CANCELED): # parking aleady canceled. do nothing.
+		data = {'msg': "parking already canceled"}
+		return JsonResponse(data)
+
+
 
 	# seller.profile.points 	   		+= chosen_parking.cost
 	# seller.save()
@@ -636,7 +656,7 @@ def report_free_parking(request):
 					if (parking.parking_rank >= THRESHOLD_RATING_TO_FREE_SPOT):
 						now = datetime.datetime.now()
 						parking.is_verified = 1
-						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =GREEN, date=given_parking_time)
+						stat = Statistics( lat = parking_address_lat ,lng= parking_address_lng,hour =  int(now.hour),rating =MAX_PARKING_RATING, date=given_parking_time)
 						print("statistics created")
 
 
@@ -1036,17 +1056,31 @@ def parking_complaint(request):
 	seller_id			= int(purchase.seller_id)
 	seller			= User.objects.get(pk = seller_id)
 	
-	buyer_id 			= int(purchase.buyer_id)
-	buyer = User.objects.get(pk = buyer_id)
 
+	buyer_id 			= int(purchase.buyer_id)
 
 	status_to_display =  purchase.status
+
+
+
+
 
 	if (diff < 0):
 		print("status_to_display = "+status_to_display)
 		data = {'msg': "Can't report on parking before parking exchange due time!", 'status_to_display':status_to_display}
 
+
+	elif (int(buyer_id) == -1):
+
+
+		purchase.status = ParkingStatus.CANCELED
+		purchase.save()
+		status_to_display =  purchase.status
+
+		data = {'msg': "Parking already canceled", 'status_to_display':status_to_display}
+
 	elif  (diff > ALLOWED_TIME_TO_REPORT):
+		buyer = User.objects.get(pk = buyer_id)
 
 		purchase.status = ParkingStatus.ABORT
 		purchase.save()
@@ -1059,6 +1093,7 @@ def parking_complaint(request):
 		data = {'msg': "Too much time passed from parking exchange due time!!", 'status_to_display':status_to_display}
 	else:
 		#check if user distance is close enough to report 
+		buyer = User.objects.get(pk = buyer_id)
 
 		dist_from_parking = calculate_distance(user_current_lat, user_current_lng, float(purchase.target_address_lat), float(purchase.target_address_lng))
 		print("dist_from_parking = "+str(dist_from_parking))
@@ -1066,7 +1101,8 @@ def parking_complaint(request):
 		if (dist_from_parking > ALLOWED_DISTANCE_TO_REPORT):
 			data = {'msg': "Too far from parking address, get closer to report!!", 'status_to_display':status_to_display}
 		else: # close enough and in the time
-				
+			buyer = User.objects.get(pk = buyer_id)
+	
 			purchase.status = ParkingStatus.REPORTED
 			purchase.save()
 

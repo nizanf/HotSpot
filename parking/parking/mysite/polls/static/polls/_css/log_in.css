@@ -30,7 +30,6 @@ right: -40px;
 bottom: -40px;
 width: auto;
 height: auto;
-/* background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0)), color-stop(100%,rgba(0,0,0,0.65))); Chrome,Safari4+ */
 z-index: 1;
 opacity: 0.7;
 }
@@ -38,7 +37,7 @@ opacity: 0.7;
 .header{
 position: absolute;
 top: calc(50% - 35px);
-left: calc(50% - 255px);
+left: calc(45% - 255px);
 z-index: 2;
 }
 
@@ -46,8 +45,10 @@ z-index: 2;
 float: left;
 color: #fff;
 font-family: 'Exo', sans-serif;
-font-size: 35px;
+font-size: 60px;
 font-weight: 200;
+-webkit-text-stroke-width: 0.5px;
+-webkit-text-stroke-color: black;
 }
 
 .header div span{
@@ -151,5 +152,6 @@ color: rgba(255,255,255,0.6);
 }
 
 #submit{
-    width: 18em;  height: 2em;
+    width: 260px;  
+    height: 40px;
 }
