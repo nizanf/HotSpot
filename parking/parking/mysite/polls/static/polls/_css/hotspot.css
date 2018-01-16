@@ -1,11 +1,6 @@
 
-/* img{
-    float:center;
-} */
-
 .all_site{
     position: absolute;
-    /* widows: 1024px; */
     width: 100%;
     height: 100%;
     background-color:rgb(2, 2, 2);
@@ -38,7 +33,6 @@ margin-top: 7%;
 color: #fff;
 font-family: 'Exo', sans-serif;
 font-size: 50px;
-/* font-weight: 100px; */
 text-align: center;
 -webkit-text-stroke-width: 1.5px;
 -webkit-text-stroke-color: black;
@@ -51,7 +45,6 @@ text-align: center;
 
 
 .main .boxes{
-    /* display:inline-block; */
     position: relative;
     margin-top: 3%;
     float: left;
@@ -70,28 +63,3 @@ text-align: center;
 }
 
 
-/* .main .boxes .box .box_txt{
-    float: left;
-    width: 50%;
-    text-align: center;
-    height: 50%;
-    margin-bottom: 7px solid #ccc;
-    margin-top: 0%;
- 
-} 
-*/
-
-/* .main .boxes .box .box_image li{
-    display:inline-block;
-    color: rgb(153, 57, 57);
-   -moz-text-size-adjust: inherit;
-   font-family: 'Exo', sans-serif;
-   font-size: 20px;
-    padding:0px;
-    line-height:49px;
-    vertical-align:center;
-    text-align: left;
-    float: left; 
-    margin-left: 46%;
-    border-right: 1px solid #ccc;
-} */
