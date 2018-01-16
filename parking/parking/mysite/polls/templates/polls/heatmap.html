@@ -34,7 +34,7 @@
             </div>
             <pro>
                 <li>{{request.user.username}}</li>
-                <li>{{request.user.profile.points}} points</li>
+                <li>{{user_points}} points</li>
                         
                 <!-- <div class = "st"> -->
                     <span id="star1" class="fa fa-star"></span>
@@ -244,7 +244,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
       <script type="text/javascript">
 
 
-        var user_rating = '{{request.user.profile.rating}}';
+        var user_rating = '{{user_rating}}';
         console.log(user_rating);
         for(var i=1; i<=user_rating; i++){
             console.log(i);

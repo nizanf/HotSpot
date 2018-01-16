@@ -98,7 +98,9 @@ def call_login(request):
 def call_homepage(request):
 
 	update_user_spots_status (request.user.pk)
-	return render(request, 'polls/hotspot.html')
+	print request.user.profile.points
+
+	return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def call_register(request):
 	update_user_spots_status (request.user.pk)
@@ -106,11 +108,11 @@ def call_register(request):
 
 def call_report(request):
 	update_user_spots_status (request.user.pk)
-	return render(request, 'polls/report_parking.html')
+	return render(request, 'polls/report_parking.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def call_find(request):
 	update_user_spots_status (request.user.pk)
-	return render(request, 'polls/find_parking.html')
+	return render(request, 'polls/find_parking.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def call_heatmap(request):
 	update_user_spots_status (request.user.pk)
@@ -118,7 +120,7 @@ def call_heatmap(request):
 	return render(request, 'polls/heatmap.html', {'points':points})
 
 def call_offer(request):
-	return render(request, 'polls/offer_parking.html')
+	return render(request, 'polls/offer_parking.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 
 def login_user(request):
@@ -157,7 +159,7 @@ def login_user(request):
 	  	request.session['login_failures'] = 0
 	  	request.session['query'] = "0"
 	  	request.session['last_failure'] = None
-		return render(request, 'polls/is_login.html', {"is_login":"true"})
+		return render(request, 'polls/is_login.html', {"is_login":"true", 'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 	
 
 	else: # login failed	
@@ -440,7 +442,7 @@ def call_last_activity(request):
 	if (last_activity == None):
 		last_activity = ["", "", "", "", "", "", "", "-1"]
 
-		return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
+		return render(request, 'polls/last_activity.html', {'last_activity':last_activity, 'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 		
 	if (minutes_elapsed(last_activity.parking_time) > 0 and last_activity.status == ParkingStatus.AVAILABLE):
 		last_activity.status = ParkingStatus.EXPIRED
@@ -465,7 +467,7 @@ def call_last_activity(request):
 
 	last_activity = [buyer_username, seller_username, last_activity.parking_time, last_activity.status, last_activity.parking_address, contact, pincode, last_activity.pk]
 
-	return render(request, 'polls/last_activity.html', {'last_activity':last_activity }) 
+	return render(request, 'polls/last_activity.html', {'last_activity':last_activity, 'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 	
 
 def aut_pincode(request):
@@ -570,7 +572,7 @@ def call_history(request):
 		current_row = [elemnt_type, address, date_and_time, buyer_username, seller_username, status]
 		history_as_table.append(current_row)
 
-	return render(request, 'polls/history.html', {'history_as_table':history_as_table})
+	return render(request, 'polls/history.html', {'history_as_table':history_as_table, 'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 
 
@@ -600,7 +602,9 @@ def report_free_parking(request):
 	if not given_lat or not given_lng:
 
 		request.session["msg"] = "Could not find your location, try again"
-		return render(request, 'polls/hotspot.html')
+		print request.user.profile.points
+
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 	request.session["msg"] = ""
 
@@ -705,7 +709,8 @@ def report_free_parking(request):
 
 
 	request.session["msg"] = "Free parking reported successfuly"
-	return render(request, 'polls/hotspot.html')
+
+	return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def user_query(request):
 	request.session['query'] = "1"
@@ -750,8 +755,7 @@ def offer_new_parking(request):
 	if (valid_activity == True):
 		print("here!!!")
 		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
-		return render(request, 'polls/hotspot.html')
-
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 	given_lat = request.POST.get("lat_address")
 	given_lng = request.POST.get("lng_address")
 	
@@ -764,7 +768,7 @@ def offer_new_parking(request):
 	update_user_spots_status(given_seller_id)
 	if (Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE) or Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.IN_PROCESS)):
 		request.session["msg"] = "You already submitted a parking!!!"
-		return render(request, 'polls/hotspot.html')
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 	given_parking_address 		= request.POST.get("info_address") 	
 	given_parking_time_in_minutes	= int(request.POST.get("time"))
@@ -781,8 +785,7 @@ def offer_new_parking(request):
 	purchase 			= Purchase(seller_id = given_seller_id, cost=cost_value, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng, pin_code = pincode)
 	purchase.save()
 	request.session["msg"] = "Parking offered successfuly. For more details, click on - last activity"
-	return render(request, 'polls/hotspot.html')
-
+	return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def update_spots_on_map(request):
 
@@ -855,13 +858,13 @@ def find_new_parking(request):
 
 	if (buyer_user_id == seller_id):
 		request.session["msg"] = "Cannot buy your own parking !!!"
-		return render(request, 'polls/hotspot.html')
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 	# make sure user doesnt have incomplete transactions
 	valid_activity = checkIfActivityValid(request)
 	if (valid_activity == True):
 		request.session["msg"] = "You still have valid activity! End or cancel last activily to create new activity"
-		return render(request, 'polls/hotspot.html')
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 		
 	# The radius according to the zoom of the user's map
 	radius 				= request.POST.get("radius")
@@ -873,15 +876,14 @@ def find_new_parking(request):
 	# Check buyer has enough points
 	if (buyer_user.profile.points < chosen_parking.cost):
 		request.session["msg"] = "You do not have enough points!!!"
-		return render(request, 'polls/hotspot.html')
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 
 	# If the parking is not free
 	if (chosen_parking.status != ParkingStatus.AVAILABLE):
 		
 		request.session["msg"] = "Parking already booked"
-		return render(request, 'polls/hotspot.html')
-	
+		return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 	# In this stage decerase the point only from the buyer 	
 	buyer_user.profile.points -= chosen_parking.cost
 	buyer_user.save()
@@ -905,8 +907,7 @@ def find_new_parking(request):
 
 
 	request.session["msg"] = "Parking booked successfuly. For more details, click on - last activity"
-	return render(request, 'polls/hotspot.html')
-
+	return render(request, 'polls/hotspot.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 #################################################################
 
 def clear_msg(request):
