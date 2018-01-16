@@ -21,13 +21,8 @@ class Profile(models.Model):
 	points 		= models.IntegerField(default=50) #start with 50 points.
 	rating 		= models.IntegerField(default=2) # start with rating 2
 	is_blocked 	= models.IntegerField(default=0) # start with is blocked 0.
+	num_reported 	= models.IntegerField(default=0) # start with 0 reported purchases
 
-  #   numOfPurchases = models.IntegerField(default=0) # start 0 purcahses
- 	# numOfSuccessfull = models.IntegerField(default=0)
- 	# numOfIrrelevent 	 = models.IntegerField(default=0)
- 	# numOfCanceled 	 = models.IntegerField(default=0)
-
-	
 
 # TODO: Add doc
 @receiver(post_save, sender=User)
@@ -49,7 +44,6 @@ class Purchase(models.Model):
 	status 		= models.CharField(max_length=200, default="available") # available, in process, done, canceled, expired etc.
 	parking_rate 	= models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
 	
-	#target_address = models.CharField(max_length=2000, default="messi")
 	target_address_lat = models.CharField(max_length=2000)
 	target_address_lng = models.CharField(max_length=2000)
 	
@@ -65,24 +59,8 @@ class Purchase(models.Model):
 	parking_actual_rank = models.DecimalField(max_digits=3,decimal_places=2,default=Decimal('0.0000'))
 
 
-
-
 	def class_name(self):
     		return Purchase.__name__
-
-	def wait_lock(self, timeout):
-		with self.cond:
-			current_time = start_time = time.time()
-			while current_time < start_time + timeout:
-				if self.lock.acquire(False):
-					return True
-				else:
-					self.cond.wait(timeout - current_time + start_time)
-					current_time = time.time()
-		return False
-
-
-
 
 
 class FreeSpot(models.Model):
@@ -102,17 +80,6 @@ class FreeSpot(models.Model):
 
 	def class_name(self):
     		return FreeSpot.__name__
-
-	def wait_lock(self, timeout):
-		with self.cond:
-			current_time = start_time = time.time()
-			while current_time < start_time + timeout:
-				if self.lock.acquire(False):
-					return True
-				else:
-					self.cond.wait(timeout - current_time + start_time)
-					current_time = time.time()
-		return False
 
 
 class Statistics(models.Model):
