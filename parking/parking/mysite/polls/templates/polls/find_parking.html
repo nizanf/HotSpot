@@ -59,14 +59,11 @@
             </div>
             
 
-
-        
         </header>
         <div class="mapa">
             <div id="floating-panel">
-                <input id="address" type="textbox" value="Tel Aviv"><br>
-                <input id="find_parking" type="button" onclick="changeZoom()" value="Find Parking"><br>
-                <input id="radius" type="textbox" value="100"><font color="black"> meters</font><br>
+                <input id="address" type="textbox" size="36" value="Tel Aviv"><br>
+                <input id="radius" type="textbox" value="100" size="29">  <font face="Arial" color="black">  meters</font><br>
                 <select id='minutes' name = 'minutes'> +
                 <option value=5 SELECTED >5 min</option>
                 <option value=10>10 min</option>
@@ -74,8 +71,8 @@
                 <option value=20>20 min</option>
                 <option value=25>25 min</option>
                 <option value=30>30 min</option>
-
                 </select><br>
+                <input id="find_parking" type="button" onclick="changeZoom()" value="Find Parking"><br>
                 
             </div>
             <div id="googleMap"></div>

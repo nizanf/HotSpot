@@ -400,10 +400,7 @@ def buyer_cancel_parking(request):
 	update_rating_and_points(seller, DealStatus.BUYERS_FAULT, parking_id)
 	update_rating_and_points(buyer_user, DealStatus.BUYERS_FAULT, parking_id)
 
-
-	# TODO: Notify seller purchase is cancelled (reason: buyer cancelled) 
-
-	#if chosen_parking.wait_lock(TIMEOUT_LOCK):
+	# if chosen_parking.wait_lock(TIMEOUT_LOCK):
 	chosen_parking.status = ParkingStatus.AVAILABLE
 	chosen_parking.buyer_id = -1
 	chosen_parking.parking_rate = 0.0000
@@ -420,7 +417,6 @@ def call_last_activity(request):
 
 	last_activity = getUserLastActivity(request.user.pk)
 
-	# TODO: check parameters
 	if (last_activity == None):
 		last_activity = ["", "", "", "", "", "", "", "-1"]
 
@@ -486,7 +482,6 @@ def aut_pincode(request):
 		purchase.save()
 
 		if (purchase.attempt_failure < THRESHOLD_FAILURES_ATTEMPTS):	
-			# TODO: print authentication failed.. popup screen type again  \ report on buyer
 			data = {'msg': "Pincode incorrect!"}
 			
 		else:
@@ -746,7 +741,6 @@ def offer_new_parking(request):
 	seller_user = User.objects.get(pk=given_seller_id)
 	seller_rating = seller_user.profile.rating
 
-	#TODO: do we need it?? 
 	update_user_spots_status(given_seller_id)
 	if (Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.AVAILABLE) or Purchase.objects.filter(seller_id = given_seller_id, status = ParkingStatus.IN_PROCESS)):
 		request.session["msg"] = "You already submitted a parking!!!"
@@ -872,7 +866,6 @@ def find_new_parking(request):
 	buyer_user.profile.points -= chosen_parking.cost
 	buyer_user.save()
 	
-	# TODO: Last activity for buyer- Notify the buyer the pincode
 	pin_code = chosen_parking.pin_code 
 	dist_in_meters = calculate_distance(parking_address_lat, parking_address_lng, target_address_lat, target_address_lng)
 	parking_rating = dist_to_parking_rate(dist_in_meters)
@@ -1122,7 +1115,6 @@ def parking_complaint(request):
 
 ############################################################HeatMap
 
-#	TODO: init parking_actual_rank  
 def calculate_environment_average(spot_stat):
 	'''
 		given a stat_spot - calculate it's relative distance
@@ -1226,124 +1218,3 @@ def filter_statistics_last_week(all_statistics):
 		if (minutes_elapsed(stat.date) < MINUTES_IN_WEEK): # Minutes in week
 			ret.append(stat)
 	return ret
-
-	
-####################################### backup
-# def get_stats_with_colors():
-	
-# 	statistics_spots = get_statistics_color_classification()
-# 	data = {'done_spots': statistics_spots}
-
-# 	return JsonResponse(data)
-
-
-
-# def filter_spots_of_last_hours(spots, num_of_hours):
-
-# 	filtered_spots = []
-	
-# 	for nb in spots:
-# 		if (minutes_elapsed(nb.parking_time) <= (MINUTES_IN_HOUR * num_of_hours)):
-# 			filtered_spots.append(nb)
-# 	return filtered_spots
-
-# def filter_last_days_spots_by_status(num_of_hours, stat):
-# 	#get all purchases that were changed to status "done" today 
-# 	#TODO: add lambda to the filter, to filter by hour of day 
-# 	spots = Purchase.objects.filter(status = stat) # TODO:??? parking_time the parking time is today|| the object was created today )
-# 	return filter_spots_of_last_hours(spots, num_of_hours)
-
-
-
-# TODO: Remove
-#def update_user_spots_status(user_id):
-#	sell_spot_list = Purchase.objects.filter(seller_id = user_id)
-#	buy_spot_list  = Purchase.objects.filter(buyer_id = user_id)
-#
-#	all_user_spot = list(sell_spot_list) + list(buy_spot_list)
-#
-#	for spot in all_user_spot:
-#		if (spot.status == ParkingStatus.AVAILABLE or spot.status == ParkingStatus.IN_PROCESS):
-#			
-#			if (minutes_elapsed(spot.parking_time) > 0):
-#				
-#				spot.status = ParkingStatus.EXPIRED
-#				print(ParkingStatus.EXPIRED)
-#				spot.save()
-
-														
-# def update_db_free_parking():
-
-# 	all_free_parkings = Purchase.objects.all() # FreeSpot
-
-# 	for parking in all_parkings:
-# 		if (is_free_parking_time_relevant(FREE_PARKING_EXISTENCE_TIME)):
-# 			parking.delete()
-
-'''
-def refresh_map(request):
-
-	current_address 		= request.POST.get("current_address")
-	radius 					= int(request.POST.get("radius"))
-	relevant_parkings 		= get_parkings_by_radius(current_address, radius, time.now())
-	relevant_free_parkings 	= get_free_parkings_by_radius(current_address, radius, time.now())
-
-	update_db_free_parking()
-
-	return render(request, 'polls/show_available_parkings.html', { 	'relevant_parkings' : relevant_parking,\
-																	'relevant_free_parkings' : relevant_free_parking })
-	
-'''
-
-
-# Polling 
-'''
-def provide_streets_to_query(request):
-
-	user_id 				= request.user.pk  		# user id
-	user_location 			= request.POST.get("location")
-	
-	data = request.POST.get('data')
-
-	for street_name, grade in data.iteritems():
-		if (grade > 3):
-
-'''
-
-# TODO: Remove
-#def compare_pincodes(provided_pincode, actual_pincode):
-#	return provided_pincode == actual_pincode
-
-
-# # when seller insert the pincode 
-# def make_exchange(request):
-# 	parking_id 			= request.POST.get("parking_id")
-# 	offered_parking 	= Purchase.objects.get(pk=parking_id)
-
-# 	provided_pincode 	= request.POST.get("pincode")
-# 	parking_pincode		= offered_parking.pincode
-
-# 	seller_user			= User.objects.get(pk=request.user.pk)
-# 	buyer_user 			= User.objects.get(pk=offered_parking.buyer_id)
-
-# 	if (compare_pincodes(provided_pincode , parking_pincode)): # if authentication succeeded
-# 		seller.points 			+= chosen_parking.cost
-# 		offered_parking.status   = ParkingStatus.DONE
-
-# 		# update ratings of the seller and buyer
-# 		update_rating_and_points(seller_user , DealStatus.DONE,parking_id )
-# 		update_rating_and_points(buyer_user , DealStatus.DONE, parking_id)
-
-# 	else:
-# 		offered_parking.attempt_failure += 1
-
-# 		if (offered_parking.attempt_failure < THRESHOLD_FAILURES_ATTEMPTS):
-			
-# 			# TODO: print authentication failed.. popup screen type again  \ report on buyer
-# 			return render(request, 'polls/wrong_pin_code.html')
-# 		else:
-# 			# TODO: Notify that the deal cancelled - points balance stays unchanged
-# 			buyer_user.points += offered_parking.cost
-# 			buyer_user.save()
-# 			return render(request, 'polls/deal_cancelled.html')
-
