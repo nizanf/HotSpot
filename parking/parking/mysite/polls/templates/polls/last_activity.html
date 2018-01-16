@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <html>
+ {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/history.css" %}">
 
 <head>
   <!-- <meta charset="UTF-8"> -->
 	<title>Last Activity</title>
-	<meta charset="utf-8">
-	{% load static %}
-
-	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
-
+	
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-  
+ 
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
     <style>
     .checked {
         color: orange;
@@ -24,115 +25,81 @@
     }
     </style>
 
-
 </head>
 
 <body>
 
-    <div class="all_site">
-        <header>
-            <div class="logo">
-
-                <img src="{% static "polls/_images/cars.jpg" %}" height="49"/>          
-            </div>
-            <nav>
-                <ul>
-
-                    <li>{{request.user.username}}</li>
-                    <li>{{request.user.profile.points}} points</li>
-                    <li>{{request.user.profile.rating}}</li>
-
-
-
-                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
-                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
-                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
-                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>
-
-                </ul>
-            </nav>
-            <div class="head_pic">
-                    <div class="main">
-                        <div class="box_txt">
-                            <h1>HotSpot Israel</h1>
-                        </div>
-                    </div>
-            </div>
-        </header>
-
-      <div class = "pull-right">
-        <span id="star1" class="fa fa-star"></span>
-        <span id="star2" class="fa fa-star"></span>
-        <span id="star3" class="fa fa-star"></span>
-        <span id="star4" class="fa fa-star"></span>
-        <span id="star5" class="fa fa-star"></span>
-      </div>
-
-
 	<div class="all_site">
-	
-	<link rel="stylesheet" type="text/css" href="{% static "polls/_css/history.css" %}">
-    
-     
-    <div class="body">
-        <header>
-            <div class="logo">
-                <img src="{% static "polls/_images/cars.jpg" %}" height="49"/>          
-            </div>
-            <nav>
-                <ul>
-                    <a href="{% url 'polls:homepage' %}"><li>Homepage</li></a>
-                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>  
-                    <!-- TODO GO BACK TO THE LAST PAGE   -->
-                </ul>
-            </nav>
-        </header>  	
-  <h2>History</h2>
-  <div class = "pull-right">
-	<span class="fa fa-star checked"></span>
-	<span class="fa fa-star checked"></span>
-	<span class="fa fa-star checked"></span>
-	<span class="fa fa-star"></span>
-	<span class="fa fa-star"></span>
-  </div>
-  <p></p>         
-  <table class="table table-dark">
-    <thead>
-      <tr>
+        <div class="cover">
+			<header>
+				<div class="logo">
 
-	<th>Buyer</th>
-	<th>Seller</th>
-	<th>Date&Time</th>
-	<th>Status</th>
-	<th>Address</th>
-	<th>Contact</th>
-	<th>Pincode</th>
+					<img src="{% static "polls/_images/cars.jpg" %}" height="49"/>          
+				</div>
+				<pro>
+					
+					<li>{{request.user.username}}</li>
+					<li>{{request.user.profile.points}} points</li>
+					<!-- <li>{{request.user.profile.rating}}</li> -->
+				
+					
+						<span id="star1" class="fa fa-star"></span>
+						<span id="star2" class="fa fa-star"></span>
+						<span id="star3" class="fa fa-star"></span>
+						<span id="star4" class="fa fa-star"></span>
+						<span id="star5" class="fa fa-star"></span>
+					
+				</pro>
+				<nav>
+					<ur>
+						<a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
+						<a href="{% url 'polls:call_history' %}"><li><col>My History </col></li></a>
+						<a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+						<a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
+					</ur>
+				</nav>
+			
+				<div class="main">
+					<div class="box_txt">
+						<div><h1>Hot<span>Spot</span></h1></div> 
+					</div>
+				</div>
+			
+			</header>
 
-      </tr>
-    </thead>
-    <tbody>
+			<p></p>         
+			<table class="table table-dark">
+				<thead>
+				<tr>
 
+				<th>Buyer</th>
+				<th>Seller</th>
+				<th>Date&Time</th>
+				<th>Status</th>
+				<th>Address</th>
+				<th>Contact</th>
+				<th>Pincode</th>
 
+				</tr>
+				</thead>
+				<tbody>
 
+					<tr>
+						<td id="buyer">{{last_activity.0}}</td>
+						<td id="seller">{{last_activity.1}}</td>
+						<td id="date">{{last_activity.2}}</td>
+						<td id="status">{{last_activity.3}}</td>
+						<td id="address">{{last_activity.4}}</td>
+						<td id="contact">{{last_activity.5}}</td>
+						<td id="pincode">{{last_activity.6}}</td>
+					</tr>      
 
-      		<tr>
-        		<td id="buyer">{{last_activity.0}}</td>
-        		<td id="seller">{{last_activity.1}}</td>
-        		<td id="date">{{last_activity.2}}</td>
-        		<td id="status">{{last_activity.3}}</td>
-        		<td id="address">{{last_activity.4}}</td>
-        		<td id="contact">{{last_activity.5}}</td>
-        		<td id="pincode">{{last_activity.6}}</td>
-      		</tr>      
+			    </tbody>
+			</table>
 
-    </tbody>
-  </table>
-</div>
-
-
-
+	<div class="buttons">
 			<button type="button" id ='pincode_button' onclick = showButton() >Enter Pincode</button>
-			<input type="text" name ='pincode_text' id='pincode_text'/><button onclick = autPincode() type=button" name='aut_pincode' id='aut_pincode'>submit
+			<input type="text" name ='pincode_text' id='pincode_text'/><button onclick = autPincode() type="button" name='aut_pincode' id='aut_pincode'>submit
 			</button>
 		
 
@@ -146,6 +113,14 @@
 
 			<button type="button" id="report_button" title="Report other user didn't show up" onclick = reportPurchase() >Report</button>
 
+		</div>
+
+		</div>
+        <footer>
+
+            <p>Find your spot</p>
+        </footer>
+    </div>
 
 
 
@@ -367,11 +342,5 @@
 </script>
 
 
-</body>
-
-
-<footer>
-	<p>Find your spot</p>
-</footer>
-
+	</body>
 </html>

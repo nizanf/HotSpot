@@ -30,6 +30,7 @@
 <body>
 
 	<div class="all_site">
+        <div class="cover">
         <header>
             <div class="logo">
 
@@ -39,7 +40,7 @@
                 
                 <li>{{request.user.username}}</li>
                 <li>{{request.user.profile.points}} points</li>
-                <li>{{request.user.profile.rating}}</li>
+                <!-- <li>{{request.user.profile.rating}}</li> -->
             
                 
                     <span id="star1" class="fa fa-star"></span>
@@ -52,20 +53,18 @@
             <nav>
                 <ur>
                     <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
-                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                    <a href="{% url 'polls:call_history' %}"><li>My History </li></a>
                     <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
                     <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
                 </ur>
             </nav>
-           
-            <div class="head_pic">
+         
                     <div class="main">
                         <div class="box_txt">
                             <div><h1>Hot<span>Spot</span></h1></div> 
                         </div>
                     </div>
-            </div>
-       
+         
         </header>
 
     
@@ -96,7 +95,7 @@
  	        {% endfor %}
             </tbody>
         </table>
-   
+        </div>
         <footer>
 
             <p>Find your spot</p>
