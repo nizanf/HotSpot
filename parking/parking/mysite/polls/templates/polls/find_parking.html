@@ -264,6 +264,9 @@
                     
                   });
             } // End initMap function
+
+            var new_infoWindow;
+            var all_markers = [];
             //add marker function
             function addParkingMarker(parking, parking_type){
               seller_user = parking.fields.user
@@ -299,10 +302,11 @@
                     map:map,    
                     icon: i
                   });
-                  var new_infoWindow = new google.maps.InfoWindow({
+                  new_infoWindow = new google.maps.InfoWindow({
                     content: c
                   });
                   new_marker.addListener('click', function() {
+                    new_infoWindow.close();
                     new_infoWindow.open(map, new_marker);
                     document.getElementById('parking_id').value = parking.pk;
                     document.getElementById('parking_id').style.visibility = "hidden";
@@ -331,11 +335,25 @@
                       document.getElementById('parking_cost').style.visibility = "visible";
                       document.getElementById('submit').style.visibility = "visible";
                     }
-                    setTimeout(function () { new_infoWindow.close(); }, 5000);
+                    //setTimeout(function () { new_infoWindow.close(); }, 5000);
                   }); 
+
+                  all_markers.push(new_marker);
+                  alert("gaaaaaa: " + all_markers.length);
             } // End addParkingMarker
             var points = '{{request.user.profile.points}}';
             var parking_price = 10;
+
+            function clearMarkersOnMap() {
+
+              alert("Clear markers: " + all_markers.length);
+                for (var i = 0; i < all_markers.length; i++) {
+                  all_markers[i].setMap(null);
+                }
+
+                all_markers = [];
+            }
+
             function myFunction() {
               if (points < parking_price) {
                 alert("Sorry dude, you don't have enough points");
@@ -361,22 +379,25 @@
                   document.getElementById("target_address_lat").style.visibility = "hidden";
                   document.getElementById("target_address_lng").value = target_lng;
                   document.getElementById("target_address_lng").style.visibility = "hidden";
-                                      //loop to add -markers
-                                      for(var i = 0;i < rel_park.length;i++){
-                                        addParkingMarker(rel_park[i], "Purchase");
-                                      }
-                                      //loop to add -markers
-                                      for(var i = 0;i < free_rel_park.length;i++){
-                                        addParkingMarker(free_rel_park[i], "FreeSpot");
-                                      }
-                                            // var marker = new google.maps.Marker({
-                                            // map: resultsMap,
-                                            //position: results[0].geometry.location
-                                            //});
-                                          } else {
-                                            alert('Geocode was not successful for the following reason: ' + status);
-                                          }
-                                        });
+                                   
+
+                  clearMarkersOnMap();
+                  //loop to add -markers
+                  for(var i = 0;i < rel_park.length;i++){
+                    addParkingMarker(rel_park[i], "Purchase");
+                  }
+                  //loop to add -markers
+                  for(var i = 0;i < free_rel_park.length;i++){
+                    addParkingMarker(free_rel_park[i], "FreeSpot");
+                  }
+                        // var marker = new google.maps.Marker({
+                        // map: resultsMap,
+                        //position: results[0].geometry.location
+                        //});
+                      } else {
+                        alert('Geocode was not successful for the following reason: ' + status);
+                      }
+                      });
                 } // End geocodeAddress
                 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
                   infoWindow.setPosition(pos);

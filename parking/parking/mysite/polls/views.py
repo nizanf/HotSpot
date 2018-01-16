@@ -27,7 +27,7 @@ DEFAULT_COST = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
 THRESHOLD_RATING_TO_FREE_SPOT = -1 # TODO: Recover to 5
-THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000 # TODO: Recover to 5
+THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5 # TODO: Recover to 5
 THRESHOLD_FAILURES_ATTEMPTS = 3
 FREE_PARKING_EXISTENCE_TIME = 40
 FREE_PARKING_RATING_REWARD = 1.1
@@ -756,7 +756,7 @@ def offer_new_parking(request):
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time_delta.timetuple())
 	pincode = ''.join(["%s" % randint(0, 9) for num in range(0, PINCODE_LEN)])
 
-	cost_value = DEFAULT_COST + floor(seller_rating)
+	cost_value = DEFAULT_COST
 	print "parking_address", given_parking_address
 	purchase 			= Purchase(seller_id = given_seller_id, cost=cost_value, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng, pin_code = pincode)
 	purchase.save()
