@@ -135,24 +135,25 @@
                     }, function (results, status) {
                          
                         if (status == google.maps.GeocoderStatus.OK) {
-                          console.log(results);
                           if (results[0]) {
         
                             var address_textbox = document.getElementById('address');
                             address_textbox.value = results[0]['formatted_address'];
 
                             var info_address_textbox = document.getElementById('info_address');
-                            info_address_textbox.value = results[0]['formatted_address'];
+                            if (info_address_textbox != null) {
+                              info_address_textbox.value = results[0]['formatted_address'];
 
 
-                            var lat_address = document.getElementById('lat_address');
-                            var lng_address = document.getElementById('lng_address');
+                              var lat_address = document.getElementById('lat_address');
+                              var lng_address = document.getElementById('lng_address');
 
-                            var lat_value = results[0]["geometry"]["location"].lat();
-                            var lng_value = results[0]["geometry"]["location"].lng();
+                              var lat_value = results[0]["geometry"]["location"].lat();
+                              var lng_value = results[0]["geometry"]["location"].lng();
 
-                            lat_address.value = lat_value;
-                            lng_address.value = lng_value;
+                              lat_address.value = lat_value;
+                              lng_address.value = lng_value;
+                          }
 
                         } else {
                           if (pointWindow != null) {
@@ -264,6 +265,8 @@
         function addOnClickToMarker() {
 
           google.maps.event.addListener(marker, 'click', function() {
+
+              //infowindow.close();
               infowindow.open(map, marker);
 
 
@@ -353,9 +356,7 @@
   <script>
 
       var user_rating = '{{request.user.profile.rating}}';
-      console.log(user_rating);
       for(var i=1; i<=user_rating; i++){
-          console.log(i);
           document.getElementById("star"+i).classList.add('checked');
 
 

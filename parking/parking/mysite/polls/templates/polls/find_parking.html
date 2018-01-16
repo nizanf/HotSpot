@@ -65,7 +65,7 @@
         <div class="mapa">
             <div id="floating-panel">
                 <input id="address" type="textbox" value="Tel Aviv">
-                <input id="find_parking" type="button" value="Find Parking"><br>
+                <input id="find_parking" type="button" onclick="changeZoom()" value="Find Parking"><br>
                 <input id="radius" type="textbox" value="100"><font color="black"> meters</font><br>
                 <select id='minutes' name = 'minutes'> +
                 <option value=5 SELECTED >5 min</option>
@@ -133,6 +133,30 @@
             var marker=null;
             var infowindow;
             var geocoder;
+
+            function changeZoom() {
+
+              var radius_textbox = document.getElementById('radius');
+              var radius_value = radius_textbox.value;
+
+              if (isNaN(radius_value) || radius_value <= 0) {
+                alert("Wrong radius");
+                radius_textbox.value = 100;
+                return;
+              }
+              alert("radius " + radius_value);
+
+              var base_zoom = 18;
+              alert("Log: " + Math.log(radius_value) / Math.LN10);
+              alert("parseIntLog: " + Math.round(Math.log(radius_value) / Math.LN10));
+              
+              var new_zoom = base_zoom - Math.round(Math.log(radius_value) / Math.LN10);
+              alert("New: " + new_zoom);
+              map.setZoom(new_zoom);
+
+
+            }
+
             function codeLatLng(latlng, pointWindow, marker) {
               geocoder.geocode({
                 'latLng': latlng
