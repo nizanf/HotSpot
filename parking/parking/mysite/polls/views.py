@@ -26,7 +26,7 @@ TIMEOUT_LOCK = 10
 DEFAULT_COST = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
-THRESHOLD_RATING_TO_FREE_SPOT = -1
+THRESHOLD_RATING_TO_FREE_SPOT = -1 # TODO: Recover to 5
 THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5000 # TODO: Recover to 5
 THRESHOLD_FAILURES_ATTEMPTS = 3
 FREE_PARKING_EXISTENCE_TIME = 40
@@ -294,6 +294,7 @@ def update_rating_and_points(user, status, purchase_id):
 			user.profile.rating *= FREE_PARKING_RATING_REWARD 
 		
 		user.profile.points += FREE_PARKING_POINTS_REWARD
+		print "Update user.profile.points", user.profile.points
 
 	# if purcahse was completed 
 	elif status == DealStatus.DONE:
@@ -588,7 +589,7 @@ def report_free_parking(request):
 
 	request.session["msg"] = ""
 
-	given_parking_address 		= request.POST.get("address") 	
+	given_parking_address 		= request.POST.get("info_address") 	
 
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 	given_reporter_id 		= request.user.pk 
@@ -603,7 +604,6 @@ def report_free_parking(request):
 	found_valid_parking = False
 
 	if parking_in_street:
-
 		for parking in parking_in_street:
 			
 			diff_time = minutes_elapsed(parking.last_report_time)
@@ -666,7 +666,6 @@ def report_free_parking(request):
 		reporters_ids_json = free_parking.reporters_ids
 		reporters_ids_list = json.loads(reporters_ids_json)
 
-		reporters_ids_list.append(given_reporter_id)
 		reporters_ids_json = json.dumps(reporters_ids_list)
 		free_parking.reporters_ids = reporters_ids_json
 		free_parking.parking_rank += request.user.profile.rating
@@ -681,7 +680,7 @@ def report_free_parking(request):
 
 			calculate_actual_rating(stat)
 			print ("after = "+str(stat.rating))
-
+			print reporters_ids_list
 			for user_id in reporters_ids_list:
 				# Update rank/points to given_reporter_id user
 				reporter_user = User.objects.get(pk=user_id)

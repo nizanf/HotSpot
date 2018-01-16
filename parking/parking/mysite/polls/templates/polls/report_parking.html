@@ -140,13 +140,29 @@
                   }
 
 
+            function addOnClickToMarker() {
+                google.maps.event.addListener(marker, 'click', function() {
+                        
+                        infowindow.open(map, marker);
+
+                        document.getElementById('info_address').style.visibility = "visible";
+                        document.getElementById('report_submit').style.visibility = "visible";
+                        
+                        pos = marker.getPosition();
+                        result = codeLatLng(pos, infowindow, marker);
+                        var myJSON = JSON.stringify(result);
+
+
+                });
+            }
+
 
             function initMap(){
                 geocoder = new google.maps.Geocoder();
                 //map options
                 var mapCanvas = document.getElementById("googleMap");
                 var myCenter = new google.maps.LatLng(32.121678, 34.791143);
-                var mapOptions = {center: myCenter, zoom: 10};
+                var mapOptions = {center: myCenter, zoom: 16};
                 //new map
                 var map = new google.maps.Map(mapCanvas,mapOptions);
                
@@ -154,6 +170,13 @@
                     content: document.getElementById('form')
                 });
 
+
+                var imageFree ={ 
+                    url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
+                    scaledSize: new google.maps.Size(30, 50), // scaled size
+                    origin: new google.maps.Point(0,0), // origin
+                    anchor: new google.maps.Point(0, 0) // anchor
+                }
 
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
@@ -168,14 +191,15 @@
                       anchor: new google.maps.Point(0, 0) // anchor
                     }   
                     
+                    
+
                     marker = new google.maps.Marker({
                       position: pos,
                       map:map,    
-                      //icon: meimage
+                      icon: imageFree
                     });
 
                     addOnClickToMarker();
-                    
                     map.setCenter(pos);
                     result = codeLatLng(pos, null, null);
                   }, function() {
@@ -189,11 +213,13 @@
                         marker = new google.maps.Marker({
                         //  position: pos,
                           map:map,    
-                          //icon: meimage
+                          icon: imageFree
                         });
 
                         addOnClickToMarker();
                   }
+
+                  
 
 
 
@@ -213,10 +239,20 @@
                       }
                       marker.setMap(null); 
                     }
+
+                    var imageFree ={ 
+                        url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
+                        scaledSize: new google.maps.Size(30, 50), // scaled size
+                        origin: new google.maps.Point(0,0), // origin
+                        anchor: new google.maps.Point(0, 0) // anchor
+                    }
                     marker = new google.maps.Marker({
                         position: event.latLng,
-                        map: map
+                        map: map,
+                        icon: imageFree
                     });
+
+                    codeLatLng(event.latLng, null, null);
                     //marker.setMap(map); 
                     // TODO: Center the map to the marker
 
