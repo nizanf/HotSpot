@@ -47,7 +47,7 @@ class Purchase(models.Model):
 	target_address_lat = models.CharField(max_length=2000)
 	target_address_lng = models.CharField(max_length=2000)
 	
-	parking_address = models.CharField(max_length=200) #string. full address
+	parking_address = models.CharField(default='Tel Aviv', max_length=200) #string. full address
 	parking_address_lat = models.CharField(max_length=2000)
 	parking_address_lng = models.CharField(max_length=2000)
 

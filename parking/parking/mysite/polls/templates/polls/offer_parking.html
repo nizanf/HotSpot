@@ -1,404 +1,370 @@
-<!DOCTYPE html>
-<html>
-        {% load static %}
-<head>
-  <title>Offer_parking</title>
+  <!DOCTYPE html>
+  <html>
+          {% load static %}
+  <head>
+    <title>Offer_parking</title>
 
-  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
 
-   <!-- <link rel="stylesheet" type="text/css" href="{% static "polls/_css/hotspot.css" %}"> -->
-    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">    
-    <link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-      
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-
-    <style>
+     <!-- <link rel="stylesheet" type="text/css" href="{% static "polls/_css/hotspot.css" %}"> -->
+      <link rel="stylesheet" type="text/css" href="{% static "polls/_css/logo.css" %}">    
+      <link rel="stylesheet" type="text/css" href="{% static "polls/_css/find_parking.css" %}">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         
-        .checked {
-        color: orange;
-        z-index: 5;
-    }
-    </style>
+      <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+      <meta charset="utf-8">
+
+      <style>
+          
+          .checked {
+          color: orange;
+          z-index: 5;
+      }
+      </style>
 
 
 
-</head>
-<body>
+  </head>
+  <body>
 
-    <div class="all_site">
-        <div class="cover">
-        <header>
-            <div class="logo">  
-                <img src="{% static "polls/_images/cars.jpg" %}" height="49"/>          
-            </div>
-            <pro>
-                <li>{{request.user.username}}</li>
-                <li>{{request.user.profile.points}} points</li>
-               <!-- <li>{{request.user.profile.rating}}</li>  -->
-                        
-                <!-- <div class = "st"> -->
-                    <span id="star1" class="fa fa-star"></span>
-                    <span id="star2" class="fa fa-star"></span>
-                    <span id="star3" class="fa fa-star"></span>
-                    <span id="star4" class="fa fa-star"></span>
-                    <span id="star5" class="fa fa-star"></span>
-                <!-- </div> -->
-            </pro>
-            <nav>
-                <ur>
-                    <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
-                    <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
-                    <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
-                    <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
-                </ur>
-            </nav>
-           
-            <div class="main">
-                <div class="box_txt">
-                    <div><h1>Hot<span>Spot</span></h1></div> 
-                </div>
-            </div>
-           
-        
-        </header>
-        
-	<div class="mapa">
-            <div id="floating-panel">
-                <input id="address" type="textbox" value="Tel Aviv">
-                <input id="find_parking" type="button" value="Find Parking"><br>
-                <input id="radius" type="textbox" value="100"><font color="white"> meters</font><br>
-                <select id='minutes' name = 'minutes'> +
-                <option value=5 SELECTED >5 min</option>
-                <option value=10>10 min</option>
-                <option value=15>15 min</option>
-                <option value=20>20 min</option>
-                <option value=25>25 min</option>
-                <option value=30>30 min</option>
-
-                </select>
-            </div>
-            <div id="googleMap"></div>
- 
-
-
-    
-            
-          <div id="form">
-                <table>
-
-		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
-			{% csrf_token %}
-
-                    <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
-                    <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
-
-                    <tr><td>Address:</td> <td><input type='text' name ='info_address'  id='info_address'/> </td> </tr>
-                    <tr><td>Time:</td> <td><select id='time' name = 'time'> +
-                        <option value=5 SELECTED >5 min</option>
-                        <option value=10>10 min</option>
-                        <option value=15>15 min</option>
-                        <option value=20>20 min</option>
-                        <option value=25>25 min</option>
-                        <option value=30>30 min</option>
-
-                        </select> </td></tr>
-
-                    <tr><td>Parking Size:</td> <td><select id='type' name = 'size'> +
-                        <option value='small'>small</option>
-                        <option value='medium' SELECTED>medium</option>
-                        <option value='Large'>Large</option>
-                        </select> </td></tr>
-                        <tr><td></td><td><input type='submit' value='Offer'></td></tr> </form>
-                </table>
-		</div>
-            <div id="message">Location saved</div>            
-	</div>
-	
+      <div class="all_site">
+          <div class="cover">
+          <header>
+              <div class="logo">  
+                  <img src="{% static "polls/_images/cars.jpg" %}" height="49"/>          
+              </div>
+              <pro>
+                  <li>{{request.user.username}}</li>
+                  <li>{{request.user.profile.points}} points</li>
+                 <!-- <li>{{request.user.profile.rating}}</li>  -->
+                          
+                  <!-- <div class = "st"> -->
+                      <span id="star1" class="fa fa-star"></span>
+                      <span id="star2" class="fa fa-star"></span>
+                      <span id="star3" class="fa fa-star"></span>
+                      <span id="star4" class="fa fa-star"></span>
+                      <span id="star5" class="fa fa-star"></span>
+                  <!-- </div> -->
+              </pro>
+              <nav>
+                  <ur>
+                      <a href="{% url 'polls:logout' %}"><li>Log Out</li></a>                    
+                      <a href="{% url 'polls:call_history' %}"><li>My History</li></a>
+                      <a href="{% url 'polls:call_last_activity' %}"><li>Last Activity</li></a>
+                      <a href="{% url 'polls:homepage' %}"><li>Home Page</li></a>
+                  </ur>
+              </nav>
              
-        </div>
-        <footer>
-                <p>find your spot</p>
-        </footer> 
-         <p class="clear"></p>
-    
-        
+              <div class="main">
+                  <div class="box_txt">
+                      <div><h1>Hot<span>Spot</span></h1></div> 
+                  </div>
+              </div>
+             
+          
+          </header>
+          
+  	<div class="mapa">
+              <div id="floating-panel">
+                  <input id="address" type="textbox" value="Tel Aviv">
+                  <input id="find_parking" type="button" value="Find Parking"><br>
+                  <input id="radius" type="textbox" value="100"><font color="white"> meters</font><br>
+                  <select id='minutes' name = 'minutes'> +
+                  <option value=5 SELECTED >5 min</option>
+                  <option value=10>10 min</option>
+                  <option value=15>15 min</option>
+                  <option value=20>20 min</option>
+                  <option value=25>25 min</option>
+                  <option value=30>30 min</option>
+
+                  </select>
+              </div>
+              <div id="googleMap"></div>
+   
 
 
-		 <script>
-                var map;
-                var marker=null;
-                var infowindow;
-                var messagewindow;
-                var geocoder;
-
-                function codeLatLng(latlng, pointWindow, marker) {
-                  geocoder.geocode({
-                    'latLng': latlng
-                  }, function (results, status) {
-                       
-                      if (status == google.maps.GeocoderStatus.OK) {
-                        console.log(results);
-                        if (results[0]) {
       
-                          var address_textbox = document.getElementById('address');
-                          address_textbox.value = results[0]['formatted_address'];
+              
+            <div id="form">
+                  <table>
 
-                          var info_address_textbox = document.getElementById('info_address');
-                          info_address_textbox.value = results[0]['formatted_address'];
+  		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
+  			{% csrf_token %}
+
+                      <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
+                      <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
+
+                      <tr><td>Address:</td> <td><input type='text' name ='info_address'  id='info_address'/> </td> </tr>
+                      <tr><td>Time:</td> <td><select id='time' name = 'time'> +
+                          <option value=5 SELECTED >5 min</option>
+                          <option value=10>10 min</option>
+                          <option value=15>15 min</option>
+                          <option value=20>20 min</option>
+                          <option value=25>25 min</option>
+                          <option value=30>30 min</option>
+                          </select> </td></tr>
+                          <tr><td></td><td><input type='submit' id="offer_submit" value='Offer'></td></tr> </form>
+                  </table>
+  		</div>
+                       
+  	</div>
+  	
+               
+          </div>
+          <footer>
+                  <p>find your spot</p>
+          </footer> 
+           <p class="clear"></p>
+      
+          
 
 
-                          var lat_address = document.getElementById('lat_address');
-                          var lng_address = document.getElementById('lng_address');
+  		 <script>
+                  var map;
+                  var marker=null;
+                  var infowindow;
+                  var geocoder;
 
-                          var lat_value = results[0]["geometry"]["location"].lat();
-                          var lng_value = results[0]["geometry"]["location"].lng();
 
-                          lat_address.value = lat_value;
-                          lng_address.value = lng_value;
+                  document.getElementById('offer_submit').style.visibility = "hidden";
+                  document.getElementById('time').style.visibility = "hidden";
+                  document.getElementById('info_address').style.visibility = "hidden";
 
+                  function codeLatLng(latlng, pointWindow, marker) {
+                    geocoder.geocode({
+                      'latLng': latlng
+                    }, function (results, status) {
+                         
+                        if (status == google.maps.GeocoderStatus.OK) {
+                          console.log(results);
+                          if (results[0]) {
+        
+                            var address_textbox = document.getElementById('address');
+                            address_textbox.value = results[0]['formatted_address'];
+
+                            var info_address_textbox = document.getElementById('info_address');
+                            info_address_textbox.value = results[0]['formatted_address'];
+
+
+                            var lat_address = document.getElementById('lat_address');
+                            var lng_address = document.getElementById('lng_address');
+
+                            var lat_value = results[0]["geometry"]["location"].lat();
+                            var lng_value = results[0]["geometry"]["location"].lng();
+
+                            lat_address.value = lat_value;
+                            lng_address.value = lng_value;
+
+                        } else {
+                          if (pointWindow != null) {
+                              pointWindow.close();
+                              marker.setMap(null);
+                              alert('Address not found');
+                          }
+                        }
                       } else {
                         if (pointWindow != null) {
-                            pointWindow.close();
-                            marker.setMap(null);
-                            alert('Address not found');
-                        }
-                      }
-                    } else {
-                      if (pointWindow != null) {
-                        pointWindow.close();
-                        marker.setMap(null);
-                        alert('Address not found');
-                        }
-                     }
-                  });
-                }
-
-            function initMap(){
-                geocoder = new google.maps.Geocoder();
-                //map options
-                var mapCanvas = document.getElementById("googleMap");
-                var myCenter = new google.maps.LatLng(32.121678, 34.791143);
-                var mapOptions = {center: myCenter, zoom: 14};
-                //new map
-                var map = new google.maps.Map(mapCanvas,mapOptions);
-               
-                document.getElementById('find_parking').addEventListener('click', function() {
-                  geocodeAddress(geocoder, map);
-                });
-
-                infowindow = new google.maps.InfoWindow({
-                    content: document.getElementById('form')
-                });
-            
-                messagewindow = new google.maps.InfoWindow({
-                    content: document.getElementById('message')
-                });
-
-
-
-                if (navigator.geolocation) {
-                      navigator.geolocation.getCurrentPosition(function(position) {
-                        var pos = {
-                          lat: position.coords.latitude,
-                          lng: position.coords.longitude
-                        };
-                        var meimage ={ 
-                          url:'https://furtaev.ru/preview/current_location_map_pointer.png',
-                        scaledSize: new google.maps.Size(50, 50), // scaled size
-                        origin: new google.maps.Point(0,0), // origin
-                        anchor: new google.maps.Point(0, 0) // anchor
-                      }   
-                      
-                      marker = new google.maps.Marker({
-                        position: pos,
-                        map:map,    
-                        //icon: meimage
-                      });
-
-                      addOnClickToMarker();
-                      
-                      map.setCenter(pos);
-                      result = codeLatLng(pos, null, null);
-                    }, function() {
-                      handleLocationError(true, infowindow, map.getCenter());
-                    });
-
-                } else {
-                    // Browser doesn't support Geolocation
-                    //handleLocationError(false, infowindow, map.getCenter());
-
-                      marker = new google.maps.Marker({
-                      //  position: pos,
-                        map:map,    
-                        //icon: meimage
-                      });
-
-                      addOnClickToMarker();
-                }
-
-
-                google.maps.event.addListener(map, 'click', function(event) {
-                    if (marker != null) {
-                      var address_textbox = document.getElementById('address');
-                      var info_address_textbox = document.getElementById('info_address')
-                      
-                      
-                      if (address_textbox != null) {
-                        address_textbox.value = "";
+                          pointWindow.close();
+                          marker.setMap(null);
+                          alert('Address not found');
+                          }
                        }
-
-                      if (info_address_textbox != null) {
-                        info_address_textbox.value = "";
-                      }
-
-                      marker.setMap(null); 
-                    }
-                    marker = new google.maps.Marker({
-                        position: event.latLng,
-                        map: map
                     });
-                    addOnClickToMarker();
-                    map.setCenter(event.latLng);
+                  }
 
-                    codeLatLng(event.latLng, infowindow ,marker);
-                    //marker.setMap(map); 
-                    // TODO: Center the map to the marker
-                });
+              function initMap(){
+                  geocoder = new google.maps.Geocoder();
+                  //map options
+                  var mapCanvas = document.getElementById("googleMap");
+                  var myCenter = new google.maps.LatLng(32.121678, 34.791143);
+                  var mapOptions = {center: myCenter, zoom: 14};
+                  //new map
+                  var map = new google.maps.Map(mapCanvas,mapOptions);
+                 
+                  document.getElementById('find_parking').addEventListener('click', function() {
+                    geocodeAddress(geocoder, map);
+                  });
 
-              //  });
-      }
+                  infowindow = new google.maps.InfoWindow({
+                      content: document.getElementById('form')
+                  });
+              
 
-      function addOnClickToMarker() {
-
-        google.maps.event.addListener(marker, 'click', function() {
-            infowindow.open(map, marker);
-            
-            pos = marker.getPosition();
-            result = codeLatLng(pos, infowindow, marker);
-            var myJSON = JSON.stringify(result);
-
-
-        });
-
-      }
-
-      function geocodeAddress(geocoder, map) {
-       // target_lat = '';
-       // target_lng = '';
-
-       var address = document.getElementById('address').value;
-       geocoder.geocode({'address': address}, function(results, status) {
-          if (status === 'OK') {
-                var location = results[0].geometry.location;
-                map.setCenter(location);
-
-                marker = new google.maps.Marker({
-                    position: location,
-                    map:map
-                    //TODO if we want change image of marker
-                    //icon
-                    });
-
-
-                infowindow = new google.maps.InfoWindow({
-                    content: document.getElementById('form')
-                });   
-
-                google.maps.event.addListener(marker, 'click', function() {
-                        infowindow.open(map, marker);
+                  if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                          var pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                          };
+                          var meimage ={ 
+                            url:'https://furtaev.ru/preview/current_location_map_pointer.png',
+                          scaledSize: new google.maps.Size(50, 50), // scaled size
+                          origin: new google.maps.Point(0,0), // origin
+                          anchor: new google.maps.Point(0, 0) // anchor
+                        }   
                         
-                        //pos = marker.getPosition();
-                        //result = codeLatLng(pos, infowindow, marker);
-                        //var myJSON = JSON.stringify(result);
+                        marker = new google.maps.Marker({
+                          position: pos,
+                          map:map,    
+                          //icon: meimage
+                        });
+
+                        addOnClickToMarker();
+                        
+                        map.setCenter(pos);
+                        result = codeLatLng(pos, null, null);
+                      }, function() {
+                        handleLocationError(true, infowindow, map.getCenter());
+                      });
+
+                  } else {
+                      // Browser doesn't support Geolocation
+                      //handleLocationError(false, infowindow, map.getCenter());
+
+                        marker = new google.maps.Marker({
+                        //  position: pos,
+                          map:map,    
+                          //icon: meimage
+                        });
+
+                        addOnClickToMarker();
+                  }
 
 
-                 });
-                //});
+                  google.maps.event.addListener(map, 'click', function(event) {
+                      if (marker != null) {
+                        var address_textbox = document.getElementById('address');
+                        var info_address_textbox = document.getElementById('info_address')
+                        
+                        
+                        if (address_textbox != null) {
+                          address_textbox.value = "";
+                         }
 
-          } else {
-            alert('Geocode was not successful for the following reason: ' + status);
-          }
-        });
-        } // End geocodeAddress
-      // function saveData() {
-      //   var name = escape(document.getElementById('name').value);
-      //   var address = escape(document.getElementById('address').value);
-      //   var type = document.getElementById('type').value;
-      //   var latlng = marker.getPosition();
-      //   var url = 'phpsqlinfo_addrow.php?name=' + name + '&address=' + address +
-      //             '&type=' + type + '&lat=' + latlng.lat() + '&lng=' + latlng.lng();
+                        if (info_address_textbox != null) {
+                          info_address_textbox.value = "";
+                        }
 
-      //   downloadUrl(url, function(data, responseCode) {
+                        marker.setMap(null); 
+                      }
+                      marker = new google.maps.Marker({
+                          position: event.latLng,
+                          map: map
+                      });
+                      addOnClickToMarker();
+                      map.setCenter(event.latLng);
 
-      //     if (responseCode == 200 && data.length <= 1) {
-      //       infowindow.close();
-      //       messagewindow.open(map, marker);
-      //     }
-      //   });
-      // }
+                      codeLatLng(event.latLng, infowindow ,marker);
+                      //marker.setMap(map); 
+                      // TODO: Center the map to the marker
+                  });
 
-      // function downloadUrl(url, callback) {
-      //   var request = window.ActiveXObject ?
-      //       new ActiveXObject('Microsoft.XMLHTTP') :
-      //       new XMLHttpRequest;
+                //  });
+        }
 
-      //   request.onreadystatechange = function() {
-      //     if (request.readyState == 4) {
-      //       request.onreadystatechange = doNothing;
-      //       callback(request.responseText, request.status);
-      //     }
-      //   };
+        function addOnClickToMarker() {
 
-      //   request.open('GET', url, true);
-      //   request.send(null);
-      // }
-
-      // function doNothing () {
-      // }
+          google.maps.event.addListener(marker, 'click', function() {
+              infowindow.open(map, marker);
 
 
+              document.getElementById('info_address').style.visibility = "visible";
+              document.getElementById('time').style.visibility = "visible";
+              document.getElementById('offer_submit').style.visibility = "visible";
+              
+
+              pos = marker.getPosition();
+              result = codeLatLng(pos, infowindow, marker);
+              var myJSON = JSON.stringify(result);
 
 
-                // //Listen for click on map
-                //     google.maps.event.addListener(map,'click', function(event) {
-                //         //add marker
-                //         addMarker({coords:event.latLng});
-                //     }); 
-                    
-                //     function addMarker(props){
-                //     var marker = new google.maps.Marker({
-                //     position: props.coords,
-                //     map:map
-                //     //TODO if we want change image of marker
-                //     //icon
-                //     });   
-                // }
-         
-            </script>
-            
+          });
 
-            
-            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
-            
+        }
+
+        function geocodeAddress(geocoder, map) {
+         // target_lat = '';
+         // target_lng = '';
+
+         var address = document.getElementById('address').value;
+         geocoder.geocode({'address': address}, function(results, status) {
+            if (status === 'OK') {
+                  var location = results[0].geometry.location;
+                  map.setCenter(location);
+
+                  marker = new google.maps.Marker({
+                      position: location,
+                      map:map
+                      //TODO if we want change image of marker
+                      //icon
+                      });
+
+
+                  infowindow = new google.maps.InfoWindow({
+                      content: document.getElementById('form')
+                  });   
+
+                  google.maps.event.addListener(marker, 'click', function() {
+                      infowindow.open(map, marker);
+                          
+
+                      document.getElementById('info_address').style.visibility = "visible";
+                      document.getElementById('time').style.visibility = "visible";
+                      document.getElementById('offer_submit').style.visibility = "visible";
+                      
+
+                          //pos = marker.getPosition();
+                          //result = codeLatLng(pos, infowindow, marker);
+                          //var myJSON = JSON.stringify(result);
+
+
+                   });
+                  //});
+
+            } else {
+              alert('Geocode was not successful for the following reason: ' + status);
+            }
+          });
+          } // End geocodeAddress
         
-    </div> 
+                  // //Listen for click on map
+                  //     google.maps.event.addListener(map,'click', function(event) {
+                  //         //add marker
+                  //         addMarker({coords:event.latLng});
+                  //     }); 
+                      
+                  //     function addMarker(props){
+                  //     var marker = new google.maps.Marker({
+                  //     position: props.coords,
+                  //     map:map
+                  //     //TODO if we want change image of marker
+                  //     //icon
+                  //     });   
+                  // }
+           
+              </script>
+              
 
-<script>
+              
+              <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
+              
+          
+      </div> 
 
-    var user_rating = '{{request.user.profile.rating}}';
-    console.log(user_rating);
-    for(var i=1; i<=user_rating; i++){
-        console.log(i);
-        document.getElementById("star"+i).classList.add('checked');
+  <script>
+
+      var user_rating = '{{request.user.profile.rating}}';
+      console.log(user_rating);
+      for(var i=1; i<=user_rating; i++){
+          console.log(i);
+          document.getElementById("star"+i).classList.add('checked');
 
 
-    }
+      }
 
-</script>
+  </script>
 
 
 
-</body>
-</html>
+  </body>
+  </html>

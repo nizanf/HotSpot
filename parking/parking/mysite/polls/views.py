@@ -753,7 +753,7 @@ def offer_new_parking(request):
 		request.session["msg"] = "You already submitted a parking!!!"
 		return render(request, 'polls/hotspot.html')
 
-	given_parking_address 		= request.POST.get("address") 	
+	given_parking_address 		= request.POST.get("info_address") 	
 	given_parking_time_in_minutes	= int(request.POST.get("time"))
 
 	now = datetime.datetime.now()
@@ -764,7 +764,7 @@ def offer_new_parking(request):
 	pincode = ''.join(["%s" % randint(0, 9) for num in range(0, PINCODE_LEN)])
 
 	cost_value = DEFAULT_COST + floor(seller_rating)
-
+	print "parking_address", given_parking_address
 	purchase 			= Purchase(seller_id = given_seller_id, cost=cost_value, parking_address = given_parking_address, parking_time = given_parking_time, parking_address_lat = given_lat, parking_address_lng = given_lng, pin_code = pincode)
 	purchase.save()
 	request.session["msg"] = "Parking offered successfuly. For more details, click on - last activity"
