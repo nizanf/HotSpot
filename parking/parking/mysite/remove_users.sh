@@ -5,12 +5,12 @@ User = get_user_model()
 
 #remove all dummy users
 LAST_NAME = "lastName"
-dummy_users = Purchase.objects.filter(last_name = LAST_NAME)
+dummy_users = Users.objects.filter(last_name = LAST_NAME)
 
 try:
 	for user in dummy_users:
 		user.delete()
 
-except Purchase.DoesNotExist:
+except Users.DoesNotExist:
 	pass
 
