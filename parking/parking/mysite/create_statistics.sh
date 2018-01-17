@@ -13,7 +13,7 @@ import time
 from random import randint
 from time import gmtime, strftime
 from math import floor,radians,cos, sin, asin, sqrt
-NUM_OF_COORDINATES = 500
+NUM_OF_COORDINATES = 1000
 MAX_RED = 35
 MAX_YELLOW = 20 
 MAX_GREEN = 15
@@ -73,7 +73,6 @@ def createAzrieliCoors():
 		lngs.append(random.uniform(leftDownLng,rightUpLng))
 
 
-
 def createStateSquereCoors():
 	rightUpLat = 32.08948298
 	rightUpLng = 34.79422688
@@ -84,6 +83,191 @@ def createStateSquereCoors():
 	for j in range(0,NUM_OF_COORDINATES):
 		lats.append(random.uniform(leftDownLat,rightUpLat))
 		lngs.append(random.uniform(leftDownLng,rightUpLng))
+
+
+def setNamirCenter():
+	global center_lat
+	global center_lng
+	
+	center_lat = 32.1101178
+	center_lng = 34.792159
+
+def createNamirCoors():
+	rightUpLat = 32.11311308
+	rightUpLng = 34.79910851
+
+	leftDownLat = 32.10148056
+	leftDownLng = 32.10148056
+
+	for j in range(0,NUM_OF_COORDINATES):
+		lats.append(random.uniform(leftDownLat,rightUpLat))
+		lngs.append(random.uniform(leftDownLng,rightUpLng))		
+
+def setHofMetzitzimCenter():
+	global center_lat
+	global center_lng
+	
+	center_lat = 32.09362778
+	center_lng = 34.77747917
+
+def createHofMetzitzimCoors():
+	rightUpLat = 32.09420949
+	rightUpLng = 34.78177071
+
+	leftDownLat = 32.08810133
+	leftDownLng = 34.77147102
+
+	for j in range(0,NUM_OF_COORDINATES):
+		lats.append(random.uniform(leftDownLat,rightUpLat))
+		lngs.append(random.uniform(leftDownLng,rightUpLng))		
+
+
+def setSederotBenGurionCenter():
+	global center_lat
+	global center_lng
+	
+	center_lat = 32.08868308
+	center_lng = 34.77747917
+
+def creatSederotBenGurionCoors():
+	rightUpLat = 32.0925007
+	rightUpLng = 34.78350878
+
+	leftDownLat = 32.0875923
+	leftDownLng = 34.77136374
+
+	for j in range(0,NUM_OF_COORDINATES):
+		lats.append(random.uniform(leftDownLat,rightUpLat))
+		lngs.append(random.uniform(leftDownLng,rightUpLng))		
+
+
+def setGivatAmalCenter():
+	global center_lat
+	global center_lng
+	
+	center_lat = 32.09348235
+	center_lng = 34.7988081
+
+def creatGivatAmalCoors():
+	rightUpLat = 32.11951034
+	rightUpLng = 34.82095242
+
+	leftDownLat = 32.09202805
+	leftDownLng = 34.79391575
+
+	for j in range(0,NUM_OF_COORDINATES):
+		lats.append(random.uniform(leftDownLat,rightUpLat))
+		lngs.append(random.uniform(leftDownLng,rightUpLng))	
+
+	cnt_red = 0
+	cnt_yellow = 0
+	cnt_green = 0
+	for i in range(3,5):
+
+		# create random coordinates in Tel Aviv
+		numOfStats= NUM_OF_COORDINATES*loads[i]
+
+		for j in range(0,int(numOfStats)):
+			if j%100 ==0:
+				print("j%100 =:" + str(j))
+			given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+			dist = calculate_distance(lats[j],lngs[j],center_lat, center_lng)
+		#	l.append(dist)
+			#calc_rating = dist_to_parking_rate(dist)
+			calc_rating = 0
+
+			if (dist < 600):
+				# if (cnt_red >= MAX_RED):
+				# 	continue
+				cnt_red += 1 
+				calc_rating = 0
+			
+			elif (600 <=dist < 1200): 
+				# if (cnt_yellow >= MAX_YELLOW):
+				# 	continue
+				cnt_yellow += 1 	
+				calc_rating = 0.4
+
+			elif(1200 <=dist < 2000):
+				# if (cnt_green >= MAX_GREEN):
+				# 	continue
+				cnt_green += 1 
+				calc_rating = 0.8
+
+			else: 
+				continue
+			stat = Statistics(lat = lats[j] ,lng= lngs[j],hour = i,rating = calc_rating, date= given_parking_time)
+			#calculate_actual_rating(stat)
+			stat.save()
+	print("red: " + str(cnt_red) + " yello: " + str(cnt_yellow) + " green: "+ str(cnt_green))	
+
+
+
+
+def setRokachCenter():
+	global center_lat
+	global center_lng
+	
+	center_lat = 32.10046265
+	center_lng = 34.79123354
+
+def creatRokachCoors():
+	rightUpLat = 32.10500683
+	rightUpLng = 34.79827166
+
+	leftDownLat = 32.09315513
+	leftDownLng = 34.78067636
+
+	for j in range(0,NUM_OF_COORDINATES):
+		lats.append(random.uniform(leftDownLat,rightUpLat))
+		lngs.append(random.uniform(leftDownLng,rightUpLng))	
+
+	cnt_red = 0
+	cnt_yellow = 0
+	cnt_green = 0
+	for i in range(3,5):
+
+		# create random coordinates in Tel Aviv
+		numOfStats= NUM_OF_COORDINATES*loads[i]
+
+		for j in range(0,int(numOfStats)):
+			if j%100 ==0:
+				print("j%100 =:" + str(j))
+			given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+			dist = calculate_distance(lats[j],lngs[j],center_lat, center_lng)
+		#	l.append(dist)
+			#calc_rating = dist_to_parking_rate(dist)
+			calc_rating = 0
+
+			if (dist < 600):
+				# if (cnt_red >= MAX_RED):
+				# 	continue
+				cnt_red += 1 
+				calc_rating = 0
+			
+			elif (600 <=dist < 1200): 
+				# if (cnt_yellow >= MAX_YELLOW):
+				# 	continue
+				cnt_yellow += 1 	
+				calc_rating = 0.4
+
+			elif(1200 <=dist < 2000):
+				# if (cnt_green >= MAX_GREEN):
+				# 	continue
+				cnt_green += 1 
+				calc_rating = 0.8
+
+			else: 
+				continue
+			stat = Statistics(lat = lats[j] ,lng= lngs[j],hour = i,rating = calc_rating, date= given_parking_time)
+			#calculate_actual_rating(stat)
+			stat.save()
+	print("red: " + str(cnt_red) + " yello: " + str(cnt_yellow) + " green: "+ str(cnt_green))	
+
+
+
+
+
 
 def init_loads():
 	#init loads list
@@ -108,33 +292,6 @@ def init_loads():
 	for i in range(22,HOURS_IN_DAY):
 		loads[i] = 0.3
 
-# def calculate_distance(lat1, lon1, lat2, lon2):
-#     """
-#     Calculate the great circle distance between two points 
-#     on the earth (specified in decimal degrees)
-#     """
-#     # convert decimal degrees to radians 
-#     lon1, lat1, lon2, lat2  = map(radians, [lon1, lat1, lon2, lat2])
-#     # haversine formula 
-#     dlon = lon2 - lon1 
-#     dlat = lat2 - lat1 
-#     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-#     c = 2 * asin(sqrt(a)) 
-#     # Radius of earth in kilometers is 6371
-#     m = 6371* c*1000
-#     return m
-
-# def calculate_actual_rating(spot_stat):
-# 	'''
-# 		update rank for new statistics object: spot_stat
-# 	'''
-# 	spot_rating = float(spot_stat.rating)
-
-# 	stat_rating = ((1-OLD_RANK_WEIGHT) * spot_rating) + (OLD_RANK_WEIGHT * float(calculate_environment_average(spot_stat)))
-# 	spot_stat.rating = stat_rating
-# 	spot_stat.save()
-
-
 
 def createStats():
 	cnt_red = 0
@@ -144,7 +301,7 @@ def createStats():
 	# print("diana")
 	# print(HOURS_IN_DAY)
 	#for i in range(0,HOURS_IN_DAY):
-	for i in range(2,4):
+	for i in range(3,5):
 
 		# create random coordinates in Tel Aviv
 		numOfStats= NUM_OF_COORDINATES*loads[i]
@@ -166,13 +323,13 @@ def createStats():
 				cnt_red += 1 
 				calc_rating = 0
 			
-			elif (400 <=dist < 750): 
+			elif (400 <=dist < 800): 
 				# if (cnt_yellow >= MAX_YELLOW):
 				# 	continue
 				cnt_yellow += 1 	
 				calc_rating = 0.4
 
-			elif(750 <=dist < 1000):
+			elif(800 <=dist < 1250):
 				# if (cnt_green >= MAX_GREEN):
 				# 	continue
 				cnt_green += 1 
@@ -188,7 +345,8 @@ def createStats():
 			# print("date"+ str(given_parking_time))
 			# print("-------------------------")
 			stat = Statistics(lat = lats[j] ,lng= lngs[j],hour = i,rating = calc_rating, date= given_parking_time)
-			calculate_actual_rating(stat)
+		#	calculate_actual_rating(stat)
+			stat.save()
 	print("red: " + str(cnt_red) + " yello: " + str(cnt_yellow) + " green: "+ str(cnt_green))
 
 	#print l
@@ -218,3 +376,35 @@ lngs = []
 setStateSquere()
 createStateSquereCoors()
 createStats()
+
+lats = []
+lngs = []
+setNamirCenter()
+createNamirCoors()
+createStats()
+
+
+lats = []
+lngs = []
+setHofMetzitzimCenter()
+createHofMetzitzimCoors()
+createStats()
+
+
+lats = []
+lngs = []
+
+setSederotBenGurionCenter()
+creatSederotBenGurionCoors()
+createStats()
+
+lats = []
+lngs = []
+
+setGivatAmalCenter()
+creatGivatAmalCoors()
+
+lats = []
+lngs = []
+setRokachCenter()
+creatRokachCoors()
