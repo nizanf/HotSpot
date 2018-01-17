@@ -117,7 +117,7 @@ def call_find(request):
 def call_heatmap(request):
 	update_user_spots_status (request.user.pk)
 	points = get_statistics_color_classification()
-	return render(request, 'polls/heatmap.html', {'points':points})
+	return render(request, 'polls/heatmap.html', {'points':points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def call_offer(request):
 	return render(request, 'polls/offer_parking.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
@@ -934,6 +934,9 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * asin(sqrt(a)) 
     # Radius of earth in kilometers is 6371
     m = 6371* c*1000
+    print "Meters: ", m
+    print lat1, lon1, lat2, lon2
+    print "------------------------"
     return m
 
 
@@ -1088,11 +1091,14 @@ def parking_complaint(request):
 	else:
 		#check if user distance is close enough to report 
 		buyer = User.objects.get(pk = buyer_id)
+		print user_current_lat, user_current_lng, float(purchase.target_address_lat), float(purchase.target_address_lng)
 
 		dist_from_parking = calculate_distance(user_current_lat, user_current_lng, float(purchase.target_address_lat), float(purchase.target_address_lng))
 		print("dist_from_parking = "+str(dist_from_parking))
 		print("ALLOWED_DISTANCE_TO_REPORT = "+str(ALLOWED_DISTANCE_TO_REPORT))
+
 		if (dist_from_parking > ALLOWED_DISTANCE_TO_REPORT):
+			print "in here!!"
 			data = {'msg': "Too far from parking address, get closer to report!!", 'status_to_display':status_to_display}
 		else: # close enough and in the time
 			buyer = User.objects.get(pk = buyer_id)
