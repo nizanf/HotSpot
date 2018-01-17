@@ -117,7 +117,7 @@ def call_find(request):
 def call_heatmap(request):
 	update_user_spots_status (request.user.pk)
 	points = get_statistics_color_classification()
-	return render(request, 'polls/heatmap.html', {'points':points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
+	return render(request, 'polls/heatmap.html', {'points':points, 'user_points':User.objects.get(pk=request.user.pk).profile.points,'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
 
 def call_offer(request):
 	return render(request, 'polls/offer_parking.html', {'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
