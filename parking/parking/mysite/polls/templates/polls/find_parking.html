@@ -261,7 +261,7 @@
                   });
             } // End initMap function
 
-            var new_infoWindow;
+            //var new_infoWindow;
             var all_markers = [];
             //add marker function
             function addParkingMarker(parking, parking_type){
@@ -292,35 +292,65 @@
                   else{
                     i = imagePur;
                     c = document.getElementById('form');
+                    alert(c);
                   }
+
+                  // var new_infoWindow = new google.maps.InfoWindow({
+                  //   content: c
+                  // });
+
                   var new_marker = new google.maps.Marker({
                     position: coords,
                     map:map,    
-                    icon: i
+                    icon: i,
+                    customInfo: c,
+                    parkingData: parking,
+                    parkingType: parking_type
                   });
-                  new_infoWindow = new google.maps.InfoWindow({
-                    content: c
-                  });
+
+
                   new_marker.addListener('click', function() {
-                    new_infoWindow.close();
-                    new_infoWindow.open(map, new_marker);
-                    document.getElementById('parking_id').value = parking.pk;
+
+
+                  for (var i = 0; i < all_markers.length; i++) {
+                    var info = all_markers[i].iw;
+                    if (info) {info.close(); }
+                  } 
+
+                    var cc = new_marker.customInfo;
+
+                    var iw = new google.maps.InfoWindow({
+                      content: cc
+                    })
+
+                    new_marker['iw'] = iw;
+
+                    iw.open(map, new_marker);
+                    var p = new_marker.parkingData;
+
+                    document.getElementById('parking_id').value = p.pk;
                     document.getElementById('parking_id').style.visibility = "hidden";
-                    parking_address = parking.fields.parking_address;
-                    parking_time = parking.fields.parking_time;
-                    seller_name = parking.fields.seller_name;
-                    seller_rating = parking.fields.seller_rating;
-                    parking_cost = parking.fields.cost;
+                    
+                    parking_address = p.fields.parking_address;
+                    parking_time = p.fields.parking_time;
+                    seller_name = p.fields.seller_name;
+                    seller_rating = p.fields.seller_rating;
+                    parking_cost = p.fields.cost;
+                    parking_type = new_marker.parkingType
+                    
+                    alert("Danny: " + parking_address);
+                    
                     document.getElementById('parking_address').value = "Address: "+parking_address;
                     document.getElementById('parking_time').value = "Time: "+parking_time;
                     document.getElementById('seller_name').value = "Seller Name: "+seller_name;
                     document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
                     document.getElementById('parking_cost').value = "Cost: "+parking_cost;
+          
                     if (parking_type == "FreeSpot") {
                       document.getElementById('parking_time').style.visibility = "hidden";
                       document.getElementById('seller_name').style.visibility = "hidden";
                       document.getElementById('seller_rating').style.visibility = "hidden";
-                      document.getElementById('parking_address').style.visibility = "visible";
+                      document.getElementById('parking_address').style.visibility = "hidden";
                       document.getElementById('parking_cost').style.visibility = "hidden";
                       document.getElementById('submit').style.visibility = "hidden";
                     } else {
@@ -331,6 +361,36 @@
                       document.getElementById('parking_cost').style.visibility = "visible";
                       document.getElementById('submit').style.visibility = "visible";
                     }
+
+                    // new_infoWindow.close();
+                    // new_infoWindow.open(map, new_marker);
+                    // document.getElementById('parking_id').value = parking.pk;
+                    // document.getElementById('parking_id').style.visibility = "hidden";
+                    // parking_address = parking.fields.parking_address;
+                    // parking_time = parking.fields.parking_time;
+                    // seller_name = parking.fields.seller_name;
+                    // seller_rating = parking.fields.seller_rating;
+                    // parking_cost = parking.fields.cost;
+                    // document.getElementById('parking_address').value = "Address: "+parking_address;
+                    // document.getElementById('parking_time').value = "Time: "+parking_time;
+                    // document.getElementById('seller_name').value = "Seller Name: "+seller_name;
+                    // document.getElementById('seller_rating').value = "Seller Rating: "+seller_rating;
+                    // document.getElementById('parking_cost').value = "Cost: "+parking_cost;
+                    // if (parking_type == "FreeSpot") {
+                    //   document.getElementById('parking_time').style.visibility = "hidden";
+                    //   document.getElementById('seller_name').style.visibility = "hidden";
+                    //   document.getElementById('seller_rating').style.visibility = "hidden";
+                    //   document.getElementById('parking_address').style.visibility = "hidden";
+                    //   document.getElementById('parking_cost').style.visibility = "hidden";
+                    //   document.getElementById('submit').style.visibility = "hidden";
+                    // } else {
+                    //   document.getElementById('parking_address').style.visibility = "visible";
+                    //   document.getElementById('parking_time').style.visibility = "visible";
+                    //   document.getElementById('seller_name').style.visibility = "visible";
+                    //   document.getElementById('seller_rating').style.visibility = "visible";
+                    //   document.getElementById('parking_cost').style.visibility = "visible";
+                    //   document.getElementById('submit').style.visibility = "visible";
+                    // }
                     //setTimeout(function () { new_infoWindow.close(); }, 5000);
                   }); 
 

@@ -63,51 +63,38 @@
           
           </header>
           
-  	<div class="mapa">
-              <div id="floating-panel">
-                  <input id="address" type="textbox" value="Tel Aviv">
-                  <input id="find_parking" type="button" value="Find location"><br>
-              </div>
-              <div id="googleMap"></div>
-   
-
-
-      
-              
-            <div id="form">
-                  <table>
-
-  		<form name="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
-  			{% csrf_token %}
-
-                      <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
-                      <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
-
-                      <tr><td>Address:</td> <td><input type='text' name ='info_address'  id='info_address'/> </td> </tr>
-                      <tr><td>Time:</td> <td><select id='time' name = 'time'> +
-                          <option value=5 SELECTED >5 min</option>
-                          <option value=10>10 min</option>
-                          <option value=15>15 min</option>
-                          <option value=20>20 min</option>
-                          <option value=25>25 min</option>
-                          <option value=30>30 min</option>
-                          </select> </td></tr>
-                          <tr><td></td><td><input type='submit' id="offer_submit" value='Offer'></td></tr> </form>
-                  </table>
-  		</div>
-                       
-  	</div>
-  	
-               
+    	<div class="mapa">
+          <div id="floating-panel">
+              <input id="address" type="textbox" value="Tel Aviv">
+              <input id="find_parking" type="button" value="Find location"><br>
           </div>
-          <footer>
-                <p>HotSpot -  find your spot</p>
-          </footer> 
-           <p class="clear"></p>
+          <div id="googleMap"></div>
+     
+         	<form name="form" id="form" method="post" action="{% url 'polls:offer_new_parking'  %}" >
+    			     {% csrf_token %}
+               <table>
+              <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
+              <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
+
+              <tr><td>Address:</td> <td><input type='text' readonly="true" name ='info_address'  id='info_address'/> </td> </tr>
+              <tr><td>Time:</td> <td><select id='time' name = 'time'> +
+                  <option value=5 SELECTED >5 min</option>
+                  <option value=10>10 min</option>
+                  <option value=15>15 min</option>
+                  <option value=20>20 min</option>
+                  <option value=25>25 min</option>
+                  <option value=30>30 min</option>
+                  </select> </td></tr>
+                  <tr><td></td><td><input type='submit' id="offer_submit" value='Offer'></td></tr>
+              </table></form>
+    		  </div>
+  	   </div>
+               
+      <footer>
+            <p>HotSpot -  find your spot</p>
+      </footer> 
+       <p class="clear"></p>
       
-          
-
-
   		 <script>
                   var map;
                   var marker=null;
@@ -293,8 +280,8 @@
                   map.setCenter(location);
 
 
-                  if (marker != null){
-                    marker.setMap(null);
+                  if (marker != null) {
+                      marker.setMap(null);
                   }
 
                   marker = new google.maps.Marker({
@@ -305,17 +292,21 @@
                       });
 
 
-                  infowindow = new google.maps.InfoWindow({
-                      content: document.getElementById('form')
-                  });   
+                  // infowindow = new google.maps.InfoWindow({
+                  //     content: document.getElementById('form')
+                  // });   
 
                   google.maps.event.addListener(marker, 'click', function() {
+
                       infowindow.open(map, marker);
                           
                       console.log(document.getElementById('info_address'));
                       document.getElementById('info_address').style.visibility = "visible";
                       document.getElementById('time').style.visibility = "visible";
                       document.getElementById('offer_submit').style.visibility = "visible";
+                      
+                      pos = marker.getPosition();
+                      result = codeLatLng(pos, infowindow, marker);
                       
 
                           //pos = marker.getPosition();

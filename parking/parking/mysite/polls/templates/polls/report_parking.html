@@ -55,31 +55,23 @@
             </div>
         </header>
 
-           <div class="mapa">
-            <div id="floating-panel">
-                <input id="address" type="textbox" value="Tel Aviv">
-                <input id="find_parking" type="button" value="Find Location"><br>
-            </div>
-            <div id="googleMap"></div>
- 
-            
-          <div id="form">
+             <div class="mapa">
+              <div id="floating-panel">
+                  <input id="address" type="textbox" value="Tel Aviv">
+                  <input id="find_parking" onclick="galFunc()" type="button" value="Find Location"><br>
+              </div>
+              <div id="googleMap"></div>
+   
+      		    <form name="form" id="form" method="post" action="{% url 'polls:report_free_parking'  %}" >
+      			   {% csrf_token %}
                 <table>
+                      <tr><td><input type='hidden' name ='lat_address'  id='lat_address'/> </td> </tr>
+                      <tr><td><input type='hidden' name ='lng_address'  id='lng_address'/> </td> </tr>
 
-		<form name="form" method="post" action="{% url 'polls:report_free_parking'  %}" >
-			{% csrf_token %}
-
-                    <tr><td hidden><input type='text' name ='lat_address'  id='lat_address'/> </td> </tr>
-                    <tr><td hidden><input type='text' name ='lng_address'  id='lng_address'/> </td> </tr>
-
-                    <tr><td>Address:</td> <td><input type='text' name ='info_address'  id='info_address'/> </td> </tr>
-                        <tr><td></td><td><input type='submit' id='report_submit' value='Report'></td></tr>
-                </table>
-            </div>
-        </div>
-           
-           
-                   
+                      <tr><td>Address:</td> <td><input type='text' name ='info_address' readonly="true" id='info_address'/> </td> </tr>
+                          <tr><td></td><td><input type='submit' id='report_submit' value='Report'></td></tr>
+                  </table></form>
+          </div>
         </div>
         <footer>
                 <p>HotSpot -  find your spot</p>
@@ -87,6 +79,8 @@
          <p class="clear"></p>
                
            <script>
+
+            function galFunc() {alert("danny"); console.log(document.getElementById('info_address'));}
 
                 document.getElementById('report_submit').style.visibility = "hidden";
                 document.getElementById('info_address').style.visibility = "hidden";
@@ -156,7 +150,67 @@
                 });
             }
 
+            function geocodeAddress(geocoder, map) {
+               // target_lat = '';
+               // target_lng = '';
+               var address = document.getElementById('address').value;
+               geocoder.geocode({'address': address}, function(results, status) {
+                if (status === 'OK') {
 
+                 //document.getElementById('info_address').value = address;
+
+                  var location = results[0].geometry.location;
+                  map.setCenter(location);
+                  target_lat = location.lat();
+                  target_lng = location.lng();
+
+                  document.getElementById("lat_address").value = target_lat;
+                  document.getElementById("lat_address").style.visibility = "hidden";
+                  document.getElementById("lng_address").value = target_lng;
+                  document.getElementById("lng_address").style.visibility = "hidden";
+                                   
+                  var imageFree ={ 
+                        url:'http://www.clker.com/cliparts/q/I/Q/u/Z/1/marker-hi.png',
+                        scaledSize: new google.maps.Size(30, 50), // scaled size
+                        origin: new google.maps.Point(0,0), // origin
+                        anchor: new google.maps.Point(17, 50) // anchor
+                  }
+                  marker.setMap(null);
+                  marker = new google.maps.Marker({
+                        position: location,
+                        map: map,
+                        icon: imageFree
+                  });
+
+                  map.setCenter(location);
+
+                  google.maps.event.addListener(marker, 'click', function() {
+                        
+                        infowindow.open(map, marker);
+
+                        document.getElementById('info_address').style.visibility = "visible";
+                        document.getElementById('report_submit').style.visibility = "visible";
+                        
+                        // pos = marker.getPosition();
+                        // result = codeLatLng(pos, infowindow, marker);
+                        // var myJSON = JSON.stringify(result);
+
+
+                  });
+
+
+
+
+
+                  // var marker = new google.maps.Marker({
+                  // map: resultsMap,
+                  //position: results[0].geometry.location
+                  //});
+                } else {
+                  alert('Geocode was not successful for the following reason: ' + status);
+                }
+               });
+            } 
             function initMap(){
                 geocoder = new google.maps.Geocoder();
                 //map options
@@ -177,6 +231,10 @@
                     origin: new google.maps.Point(0,0), // origin
                     anchor: new google.maps.Point(17, 50)
                 }
+
+                document.getElementById('find_parking').addEventListener('click', function() {
+                  geocodeAddress(geocoder, map);
+                });
 
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
@@ -212,12 +270,6 @@
                         addOnClickToMarker();
                   }
 
-                  
-
-
-
-
-            
                 google.maps.event.addListener(map, 'click', function(event) {
                     if (marker != null){
                       var address_textbox = document.getElementById('address');
@@ -265,25 +317,8 @@
                 });
       }
      
-                // //Listen for click on map
-                //     google.maps.event.addListener(map,'click', function(event) {
-                //         //add marker
-                //         addMarker({coords:event.latLng});
-                //     }); 
-                    
-                //     function addMarker(props){
-                //     var marker = new google.maps.Marker({
-                //     position: props.coords,
-                //     map:map
-                //     //TODO if we want change image of marker
-                //     //icon
-                //     });   
-                // }
-         
             </script>
-            
-
-            
+s            
             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIn9K5Niimp_WDiNC8ckPUcKdi_RxYLHM&language=en&callback=initMap"></script>
       
 
