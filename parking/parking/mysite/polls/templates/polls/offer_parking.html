@@ -240,8 +240,6 @@
                       map.setCenter(event.latLng);
 
                       codeLatLng(event.latLng, infowindow ,marker);
-                      //marker.setMap(map); 
-                      // TODO: Center the map to the marker
                   });
 
                 //  });
@@ -287,14 +285,9 @@
                   marker = new google.maps.Marker({
                       position: location,
                       map:map
-                      //TODO if we want change image of marker
-                      //icon
+
                       });
 
-
-                  // infowindow = new google.maps.InfoWindow({
-                  //     content: document.getElementById('form')
-                  // });   
 
                   google.maps.event.addListener(marker, 'click', function() {
 

@@ -26,7 +26,7 @@ TIMEOUT_LOCK = 10
 DEFAULT_COST = 10
 TIMEOUT_AVAILABLE_PARKING = 20
 THRESHOLD_FAILURES = 5
-THRESHOLD_RATING_TO_FREE_SPOT = -1 # TODO: Recover to 5
+THRESHOLD_RATING_TO_FREE_SPOT =  5
 THRESHOLD_RELEVANT_PARKING_TIME_DIFF = 5 # TODO: Recover to 5
 THRESHOLD_FAILURES_ATTEMPTS = 3
 FREE_PARKING_EXISTENCE_TIME = 40
@@ -1038,8 +1038,8 @@ def parking_complaint(request):
 	purchase_id			= request.POST.get("purchase_id")
 	purchase			= Purchase.objects.get(pk=purchase_id)
 
-	user_current_lat	= 32.0852999  #float(request.POST.get("lat"))
-	user_current_lng	= 34.7817676  #float(request.POST.get("lng"))
+	user_current_lat	= float(request.POST.get("lat"))
+	user_current_lng	= float(request.POST.get("lng"))
 
 	#report_time 		= datetime.datetime.now()
 	purchase_time 		= purchase.parking_time
