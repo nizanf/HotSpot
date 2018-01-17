@@ -1,6 +1,7 @@
 import sys
 import random
 import datetime
+import json
 import time
 from random import randint
 from time import gmtime, strftime
@@ -91,7 +92,7 @@ def createRandomFreeSpots():
 
 		given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 		#create new freeSpot 
-		free_parking = FreeSpot(reporters_ids = reporter.pk, last_report_time = given_parking_time,
+		free_parking = FreeSpot(reporters_ids = json.dumps([reporter.pk]), last_report_time = given_parking_time,
 			 						parking_address = DUMMY_ADDRESS, street_name = DUMMY_ADDRESS, 	
 			 						parking_address_lat = lats[i], parking_address_lng = lngs[i], 
 									parking_rank = reporter.profile.rating)

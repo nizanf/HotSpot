@@ -570,6 +570,7 @@ def call_history(request):
 			status = "N/A"
 
 		current_row = [elemnt_type, address, date_and_time, buyer_username, seller_username, status]
+		print current_row
 		history_as_table.append(current_row)
 
 	return render(request, 'polls/history.html', {'history_as_table':history_as_table, 'user_points':User.objects.get(pk=request.user.pk).profile.points, 'user_rating':User.objects.get(pk=request.user.pk).profile.rating})
@@ -611,7 +612,7 @@ def report_free_parking(request):
 	given_parking_address 		= request.POST.get("info_address") 	
 
 	given_parking_time = strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-	given_reporter_id 		= request.user.pk 
+	given_reporter_id  = request.user.pk 
 
 
 	given_street_name = extract_street_name(given_parking_address)
@@ -1040,14 +1041,6 @@ def parking_complaint(request):
 	user_current_lat	= 32.0852999  #float(request.POST.get("lat"))
 	user_current_lng	= 34.7817676  #float(request.POST.get("lng"))
 
-	print("user_current_lat = "+str(user_current_lat))
-	print("parking_lat = "+str(float(purchase.target_address_lat)))
-
-	print("user_current_lng = "+str(user_current_lng))
-	print("parking_lng = "+str(float(purchase.target_address_lng)))
-
-
-
 	#report_time 		= datetime.datetime.now()
 	purchase_time 		= purchase.parking_time
 	
@@ -1055,7 +1048,7 @@ def parking_complaint(request):
 
 
 	seller_id			= int(purchase.seller_id)
-	seller			= User.objects.get(pk = seller_id)
+	seller				= User.objects.get(pk = seller_id)
 	
 
 	buyer_id 			= int(purchase.buyer_id)
@@ -1118,7 +1111,7 @@ def parking_complaint(request):
 				sell_purchase = Purchase.objects.filter(seller_id = int(buyer_id))
 				buy_purchase = Purchase.objects.filter(buyer_id = int(buyer_id))
 
-
+				print "buyer.profile.num_reported)", buyer.profile.num_reported
 
 				if (float(buyer.profile.num_reported)/(len(list(sell_purchase))+len(list(buy_purchase)))  > BAN_USER_THRESHOLD):
 					buyer.profile.is_blocked = 1
@@ -1135,6 +1128,8 @@ def parking_complaint(request):
 				sell_purchase = Purchase.objects.filter(seller_id = int(seller_id))
 				buy_purchase = Purchase.objects.filter(buyer_id = int(seller_id))
 
+
+				print "seller.profile.num_reported", seller.profile.num_reported
 				if (float(seller.profile.num_reported)/(len(list(sell_purchase))+len(list(buy_purchase)))  > BAN_USER_THRESHOLD):
 					seller.profile.is_blocked = 1
 					seller.save()
@@ -1203,7 +1198,6 @@ def calculate_environment_average(spot_stat):
 		# Sum for calc weighted
 		weighted_average += float(neighbors[i].rating) * nbw
 
-	print ("Test gal= " + str(weighted_average))
 	return weighted_average
 
 

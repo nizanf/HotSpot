@@ -162,7 +162,9 @@ def creatGivatAmalCoors():
 	cnt_red = 0
 	cnt_yellow = 0
 	cnt_green = 0
-	for i in range(3,5):
+	#for i in range(3,5):
+	for i in range(0,HOURS_IN_DAY):
+		print("start hour:" str(i))
 
 		# create random coordinates in Tel Aviv
 		numOfStats= NUM_OF_COORDINATES*loads[i]
@@ -225,8 +227,9 @@ def creatRokachCoors():
 	cnt_red = 0
 	cnt_yellow = 0
 	cnt_green = 0
-	for i in range(3,5):
-
+	#for i in range(3,5):
+	for i in range(0,HOURS_IN_DAY):
+		print("start hour:" str(i))
 		# create random coordinates in Tel Aviv
 		numOfStats= NUM_OF_COORDINATES*loads[i]
 
@@ -300,9 +303,9 @@ def createStats():
 	#for each hour in the day create points according to the load in this hour
 	# print("diana")
 	# print(HOURS_IN_DAY)
-	#for i in range(0,HOURS_IN_DAY):
-	for i in range(3,5):
-
+	for i in range(0,HOURS_IN_DAY):
+	#for i in range(3,5):
+		print("start hour:" str(i))
 		# create random coordinates in Tel Aviv
 		numOfStats= NUM_OF_COORDINATES*loads[i]
 		# l = []
