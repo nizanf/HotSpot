@@ -26,6 +26,7 @@ for i in range(0,NUM_OF_USERS):
 	new_buyer = User.objects.create_user(username=bNames[i],password = PASSWORD, email = bEmails[i], first_name = bNames[i], last_name = LAST_NAME)
 
 	new_buyer.profile.phone_number = PHONE_NUM
+	# new_buyer.profile.rating = 5
 	new_buyer.save()
 
 	new_seller = User.objects.create_user(username=sNames[i], \

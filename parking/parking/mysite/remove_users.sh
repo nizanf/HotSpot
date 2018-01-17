@@ -5,7 +5,7 @@ User = get_user_model()
 
 #remove all dummy users
 LAST_NAME = "lastName"
-dummy_users = Users.objects.filter(last_name = LAST_NAME)
+dummy_users = User.objects.filter(last_name = LAST_NAME)
 
 try:
 	for user in dummy_users:
